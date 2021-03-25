@@ -2,11 +2,15 @@ import os
 import re
 
 import imageio
+import itk
 import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
 import tensorflow as tf
 from scipy import ndimage
+from skimage import exposure
+import sys
+# np.set_printoptions(threshold=sys.maxsize)
 
 # #####################################
 # Reading and Saving files
@@ -15,41 +19,61 @@ from scipy import ndimage
 def ReadFile(filepath, verbose=1):
     if verbose == 1:
         print("Reading:", filepath)
-
-    filename = os.path.basename(filepath)
-
-    if ".png" in filename: img = Read_png_file(filepath)
-    if ".nii" in filename: img = Read_nifti_file(filepath)
-
-    return img
-
-def Read_png_file(filepath):
-    img = imageio.imread(filepath)
-    return img
-
-def Read_nifti_file(filepath):
-    """Read and load nifti file"""
-    # Read file
-    scan = nib.load(filepath)
-    # Get raw data
-    scan = scan.get_fdata()
+    
+    scan = itk.imread(filepath)
+    scan = itk.GetArrayFromImage(scan)
     return scan
+
+#     filename = os.path.basename(filepath)
+
+#     if ".png" in filename: img = Read_png_file(filepath)
+#     if ".nii" in filename: img = Read_nifti_file(filepath)
+
+#     return img
+
+# def Read_png_file(filepath):
+#     img = imageio.imread(filepath)
+#     return img
+
+# def Read_nifti_file(filepath):
+#     """Read and load nifti file"""
+#     # Read file
+#     scan = nib.load(filepath)
+#     # Get raw data
+#     scan = scan.get_fdata()
+#     return scan
 
 
 # #####################################
 # Pre-process functions
 # #####################################
 
-def Normalize(input_file):
+def Normalize(input_file,in_min=None,in_max=None,out_min=0,out_max=1):
     """Normalize the input_file"""
-    min = np.min(input_file)
-    max = np.max(input_file)
-    input_file[input_file < min] = min
-    input_file[input_file > max] = max
-    if min != max:
-        input_file = (input_file - min) / (max - min)
-    input_file = np.array(input_file)
+    if in_min is None:
+        in_min = input_file.min()
+    if in_max is None:
+        in_max = input_file.max()
+    input_file = exposure.rescale_intensity(input_file, in_range=(in_min, in_max), out_range=(out_min,out_max))
     return input_file
+
+def Adjust_Contrast(input,out_min=None,out_max=None,pmin=10,pmax=90):
+
+    if out_min is None:
+        out_min = input.min()
+    if out_max is None:
+        out_max = input.max()
+
+    val_min, val_max = np.percentile(input[input!=0], (pmin, pmax))
+    print(val_min, val_max)
+    input = Normalize(input, val_min,val_max, out_min,out_max)
+
+    input = exposure.equalize_hist(input)
+    print(input.dtype, input.min(), input.max())
+
+    input = Normalize(input, out_min=out_min, out_max=out_max)
+
+    return input
 
 def Resize_2D(img, desired_width, desired_height):
     """Resize 2D image"""
@@ -64,6 +88,14 @@ def Resize_2D(img, desired_width, desired_height):
 
     img = ndimage.zoom(img, (width_factor, height_factor), order=1)
     return img
+
+def Deconstruction(img, filename, outdir, desired_width=512, desired_height=512):
+    """Separate each slice of a 3D image"""
+    for z in range(img.shape[0]):
+        slice = img[z,:,:]
+        out = outdir+'/'+os.path.basename(filename).split('.')[0]+'_'+str(z)+'.png'
+        slice = Resize_2D(slice, desired_width, desired_height)
+        imageio.imwrite(out, slice.astype(np.uint8))
 
 
 # #####################################
@@ -139,6 +171,13 @@ def Plot_slices(num_rows, num_columns, width, height, data):
     plt.subplots_adjust(wspace=0, hspace=0, left=0, right=1, bottom=0, top=1)
     plt.show()
 
+
+# #####################################
+# Post-process functions
+# #####################################
+
+def Reconstruction(dir, outdir):
+    """Reconstruction of a 3D scan from the 2D slices"""
 
 
 
