@@ -44,6 +44,16 @@ def ReadFile(filepath, verbose=1):
 #     return scan
 
 
+def SaveFile(filepath, data, ext, verbose=1):
+    if verbose == 1:
+        print("Saving:", filepath)
+
+    if ext == ".png": Save_png(filepath, data)
+
+def Save_png(filepath, data):
+    imageio.imsave(filepath, data)    
+
+
 # #####################################
 # Pre-process functions
 # #####################################
@@ -109,7 +119,7 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
         fname = os.path.basename(file_path)
         fdir  = os.path.dirname(file_path)
 
-        numberSlice = re.split('_|\.', fname)[1]
+        numberSlice = re.split('_|\.', fname)[-2]
 
         neigh_paths, input_file = [], []
         for slice in range(-neighbors,neighbors+1):
@@ -118,27 +128,26 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
 
             new_path = os.path.join(fdir,new_fname)
             if new_path not in paths:
-                fake_slice = np.zeros((width, height))
+                fake_slice = np.zeros((width, height), dtype=np.float32)
                 input_file.append(fake_slice)
 
             else:
-                input_file.append(Process_data(new_path, label))
+                # Read file
+                File = ReadFile(path, verbose=0)
+                # Normalize
+                File = Normalize(File)
+                input_file.append(File)
 
-        input_file = np.array(input_file)
+        input_file = np.array(input_file, dtype=np.float32)
         input_file = np.transpose(input_file)
 
     else:
-        input_file = np.array(Process_data(file_path, label))
-
-    return input_file
-
-def Process_data(path, label):
-    """Load input file"""
-    # Read file
-    input_file = ReadFile(path, verbose=0)
-    # Normalize
-    input_file = Normalize(input_file)
-    if label:
+        # Read file
+        File = ReadFile(path, verbose=0)
+        # Normalize
+        File = Normalize(File)
+        input_file = np.array(File, dtype=np.float32)
+        # // verifier si les labels ont la valeur 1 ou 0
         input_file[input_file<0.5]=0.0
         input_file[input_file>=0.5]=1.0
 
