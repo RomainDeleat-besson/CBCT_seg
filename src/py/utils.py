@@ -24,41 +24,24 @@ def ReadFile(filepath, verbose=1):
     scan = itk.GetArrayFromImage(scan)
     return scan
 
-#     filename = os.path.basename(filepath)
 
-#     if ".png" in filename: img = Read_png_file(filepath)
-#     if ".nii" in filename: img = Read_nifti_file(filepath)
-
-#     return img
-
-# def Read_png_file(filepath):
-#     img = imageio.imread(filepath)
-#     return img
-
-# def Read_nifti_file(filepath):
-#     """Read and load nifti file"""
-#     # Read file
-#     scan = nib.load(filepath)
-#     # Get raw data
-#     scan = scan.get_fdata()
-#     return scan
-
-
-def SaveFile(filepath, data, ext, verbose=1):
+def SaveFile(filepath, data, verbose=1):
     if verbose == 1:
         print("Saving:", filepath)
 
-    if ext == ".png": Save_png(filepath, data)
+    ext = os.path.basename(filepath)
+
+    if ".png" in ext: Save_png(filepath, data)
 
 def Save_png(filepath, data):
-    imageio.imsave(filepath, data)    
+    imageio.imsave(filepath, data)
 
 
 # #####################################
 # Pre-process functions
 # #####################################
 
-def Normalize(input_file,in_min=None,in_max=None,out_min=0,out_max=1):
+def Normalize(input_file,in_min=None,in_max=None,out_min=0,out_max=255):
     """Normalize the input_file"""
     if in_min is None:
         in_min = input_file.min()
@@ -75,11 +58,11 @@ def Adjust_Contrast(input,out_min=None,out_max=None,pmin=10,pmax=90):
         out_max = input.max()
 
     val_min, val_max = np.percentile(input[input!=0], (pmin, pmax))
-    print(val_min, val_max)
+    # print(val_min, val_max)
     input = Normalize(input, val_min,val_max, out_min,out_max)
 
     input = exposure.equalize_hist(input)
-    print(input.dtype, input.min(), input.max())
+    # print(input.dtype, input.min(), input.max())
 
     input = Normalize(input, out_min=out_min, out_max=out_max)
 
@@ -101,11 +84,11 @@ def Resize_2D(img, desired_width, desired_height):
 
 def Deconstruction(img, filename, outdir, desired_width=512, desired_height=512):
     """Separate each slice of a 3D image"""
-    for z in range(img.shape[0]):
-        slice = img[z,:,:]
+    for z in range(img.shape[2]):
+        slice = img[:,:,z]
         out = outdir+'/'+os.path.basename(filename).split('.')[0]+'_'+str(z)+'.png'
         slice = Resize_2D(slice, desired_width, desired_height)
-        imageio.imwrite(out, slice.astype(np.uint8))
+        SaveFile(out, slice.astype(np.uint8), verbose=0)
 
 
 # #####################################
@@ -147,9 +130,6 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
         # Normalize
         File = Normalize(File)
         input_file = np.array(File, dtype=np.float32)
-        # // verifier si les labels ont la valeur 1 ou 0
-        input_file[input_file<0.5]=0.0
-        input_file[input_file>=0.5]=1.0
 
     return input_file
 
