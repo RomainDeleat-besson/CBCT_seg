@@ -83,7 +83,7 @@ def main(args):
     tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
     callbacks_list = [model_checkpoint, tensorboard_callback]
 
-    epochs = 50
+    epochs = 20
     model.fit(
         x_train,
         y_train,
@@ -108,7 +108,7 @@ if __name__ ==  '__main__':
     training_path.add_argument('--log_dir', type=str, help='Directory for the logs of the model', required=True)
     
     training_parameters = parser.add_argument_group('Universal ID parameters')
-    training_parameters.add_argument('--model_name', type=str, help='name of the model', default='RootSlices_model')
+    training_parameters.add_argument('--model_name', type=str, help='name of the model', default='CBCT_seg_model')
     training_parameters.add_argument('--width', type=int, help='', default=512)
     training_parameters.add_argument('--height', type=int, help='', default=512)
     training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=32)

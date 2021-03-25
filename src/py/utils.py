@@ -116,7 +116,7 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
 
             else:
                 # Read file
-                File = ReadFile(path, verbose=0)
+                File = ReadFile(file_path, verbose=0)
                 # Normalize
                 File = Normalize(File)
                 input_file.append(File)
@@ -126,7 +126,7 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
 
     else:
         # Read file
-        File = ReadFile(path, verbose=0)
+        File = ReadFile(file_path, verbose=0)
         # Normalize
         File = Normalize(File)
         input_file = np.array(File, dtype=np.float32)

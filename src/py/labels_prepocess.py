@@ -37,19 +37,15 @@ def main(args):
 
 		if not os.path.exists(out):
 			os.makedirs(out)
-		# else:
-		# 	shutil.rmtree(out)
-		# 	os.makedirs(out)
 		
 		img = ReadFile(image)
 		img = img.transpose()
-		# print(img.dtype, img.min(), img.max())
+		img = Normalize(img)
+
+		img[img<127.5]=0
+		img[img>=127.5]=255
 		
-		print("Normalization and contrast adjustment...")
-
-		img = Normalize(img,0,img.max(),out_min=0,out_max=255)
-		img = Adjust_Contrast(img,pmin=45,pmax=90)
-
+		print("Deconstruction...")
 		Deconstruction(img, image, out, desired_width, desired_height)
 
 		

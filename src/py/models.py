@@ -19,7 +19,7 @@ def unet_2D(width, height, neighbors, NumberFilters=64, dropout=0.1, learning_ra
     inputs = Input((width, height, neighbors))
     rescale = layers.experimental.preprocessing.Rescaling(scale=1./255)(inputs)
     
-    dataAug = layers.experimental.preprocessing.RandomFlip(mode=HORIZONTAL_AND_VERTICAL)(rescale)
+    dataAug = layers.experimental.preprocessing.RandomFlip(mode="horizontal_and_vertical")(rescale)
     dataAug = layers.experimental.preprocessing.RandomRotation(0.15)(dataAug)
     dataAug = layers.experimental.preprocessing.RandomTranslation(
         height_factor=0.1, width_factor=0.1)(dataAug)
@@ -108,7 +108,7 @@ def unet_2D_deeper(width, height, neighbors, NumberFilters=32, dropout=0.1, lear
     inputs = Input((width, height, neighbors))
     rescale = layers.experimental.preprocessing.Rescaling(scale=1./255)(inputs)
     
-    dataAug = layers.experimental.preprocessing.RandomFlip(mode=HORIZONTAL_AND_VERTICAL)(rescale)
+    dataAug = layers.experimental.preprocessing.RandomFlip(mode="horizontal_and_vertical")(rescale)
     dataAug = layers.experimental.preprocessing.RandomRotation(0.15)(dataAug)
     dataAug = layers.experimental.preprocessing.RandomTranslation(
         height_factor=0.1, width_factor=0.1)(dataAug)
@@ -190,7 +190,7 @@ def unet_2D_larger(width, height, neighbors, NumberFilters=64, dropout=0.1, lear
     inputs = Input((width, height, neighbors))
     rescale = layers.experimental.preprocessing.Rescaling(scale=1./255)(inputs)
     
-    dataAug = layers.experimental.preprocessing.RandomFlip(mode=HORIZONTAL_AND_VERTICAL)(rescale)
+    dataAug = layers.experimental.preprocessing.RandomFlip(mode="horizontal_and_vertical")(rescale)
     dataAug = layers.experimental.preprocessing.RandomRotation(0.15)(dataAug)
     dataAug = layers.experimental.preprocessing.RandomTranslation(
         height_factor=0.1, width_factor=0.1)(dataAug)
