@@ -41,9 +41,6 @@ def main(args):
 		img = ReadFile(image)
 		img = img.transpose()
 		img = Normalize(img)
-
-		img[img<127.5]=0
-		img[img>=127.5]=255
 		
 		print("Deconstruction...")
 		Deconstruction(img, image, out, desired_width, desired_height)

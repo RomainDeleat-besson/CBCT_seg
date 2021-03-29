@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 import imageio
 import itk
@@ -9,32 +10,63 @@ import numpy as np
 import tensorflow as tf
 from scipy import ndimage
 from skimage import exposure
-import sys
+from tensorflow.keras.preprocessing.image import save_img
+
 # np.set_printoptions(threshold=sys.maxsize)
+
+
 
 # #####################################
 # Reading and Saving files
 # #####################################
 
-def ReadFile(filepath, verbose=1):
+def ReadFile(filepath, ImageType=None, array=False, verbose=1):
     if verbose == 1:
         print("Reading:", filepath)
     
-    scan = itk.imread(filepath)
-    scan = itk.GetArrayFromImage(scan)
+    # scan = itk.imread(filepath)
+
+    if ImageType is None: reader = itk.ImageFileReader.New(FileName=filepath)
+    else: reader = itk.ImageFileReader[ImageType].New(FileName=filepath)
+    reader.Update()
+    scan = reader.GetOutput()
+
+    if array: scan = itk.GetArrayFromImage(scan)
+
     return scan
 
 
-def SaveFile(filepath, data, verbose=1):
+def SaveFile(filepath, data, ImageType=None, verbose=1):
     if verbose == 1:
         print("Saving:", filepath)
 
     ext = os.path.basename(filepath)
 
-    if ".png" in ext: Save_png(filepath, data)
+    filepath = filepath.replace('.gz','')
+    if ImageType is None: writer = itk.ImageFileWriter.New()
+    else: writer = itk.ImageFileWriter[ImageType].New()
+    writer.SetFileName(filepath)
+    writer.SetInput(data)
+    writer.Update()
+
+    # if ".png" in ext: Save_png(filepath, data)
+    # if ".nrrd" in ext: Save_nrrd(filepath, data)
+    if ".gz" in ext: Save_gz(filepath, data)
 
 def Save_png(filepath, data):
-    imageio.imsave(filepath, data)
+    save_img(filepath, data)
+    # imageio.imsave(filepath, data)
+
+def Save_nrrd(filepath, data):
+    # nrrd.write(filepath.replace('.gz', ''), data)
+    ImageType = itk.Image[itk.US, 3]
+    writer = itk.ImageFileWriter[ImageType].New(FileName=filepath.replace('.gz',''), Input=data)
+    writer.Update()
+
+def Save_gz(filepath, data):
+    with open(filepath.replace('.gz', ''), 'rb') as f_in, gzip.open(filepath, 'wb') as f_out:
+        f_out.writelines(f_in)
+    os.remove(filepath.replace('.gz', ''))
 
 
 # #####################################
@@ -116,7 +148,7 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
 
             else:
                 # Read file
-                File = ReadFile(file_path, verbose=0)
+                File = ReadFile(file_path, array=True, verbose=0)
                 # Normalize
                 File = Normalize(File)
                 input_file.append(File)
@@ -126,9 +158,12 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
 
     else:
         # Read file
-        File = ReadFile(file_path, verbose=0)
+        File = ReadFile(file_path, array=True, verbose=0)
         # Normalize
         File = Normalize(File)
+        File[File<=np.min(File)]=0
+        File[File>np.max(File)]=255
+        File[File==255]=1
         input_file = np.array(File, dtype=np.float32)
 
     return input_file
