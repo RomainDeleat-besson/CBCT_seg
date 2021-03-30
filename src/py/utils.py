@@ -13,8 +13,11 @@ import numpy as np
 import tensorflow as tf
 from scipy import ndimage
 from skimage import exposure
+from tensorflow.keras.preprocessing.image import save_img
 
 # np.set_printoptions(threshold=sys.maxsize)
+
+
 
 # #####################################
 # Reading and Saving files
@@ -43,10 +46,10 @@ def SaveFile(filepath, data, ImageType=None, verbose=1):
     ext = os.path.basename(filepath)
     filepath = filepath.replace('.gz','')
 
-    if type(data).__module__ == np.__name__: 
-        print(type(data))
-        if ImageType is None: data = itk.GetImageFromArray(data)
-        else: data = itk.PyBuffer[ImageType].GetImageFromArray(data)
+    # if type(data).__module__ == np.__name__: 
+    #     print(type(data))
+    #     if ImageType is None: data = itk.GetImageFromArray(data)
+    #     else: data = itk.PyBuffer[ImageType].GetImageFromArray(data)
 
     if ImageType is None: writer = itk.ImageFileWriter.New()
     else: writer = itk.ImageFileWriter[ImageType].New()
@@ -59,7 +62,19 @@ def SaveFile(filepath, data, ImageType=None, verbose=1):
     if ".gz" in ext: Save_gz(filepath, data)
 
 def Save_png(filepath, data):
-    imageio.imsave(filepath, data)
+    save_img(filepath, data)
+    # imageio.imsave(filepath, data)
+
+def Save_nrrd(filepath, data):
+    # nrrd.write(filepath.replace('.gz', ''), data)
+    ImageType = itk.Image[itk.US, 3]
+    writer = itk.ImageFileWriter[ImageType].New(FileName=filepath.replace('.gz',''), Input=data)
+    writer.Update()
+
+def Save_gz(filepath, data):
+    with open(filepath.replace('.gz', ''), 'rb') as f_in, gzip.open(filepath, 'wb') as f_out:
+        f_out.writelines(f_in)
+    os.remove(filepath.replace('.gz', ''))
 
 def Save_nrrd(filepath, data):
     # nrrd.write(filepath.replace('.gz', ''), data)
@@ -159,7 +174,7 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
 
             else:
                 # Read file
-                File = ReadFile(path, verbose=0)
+                File = ReadFile(file_path, array=True, verbose=0)
                 # Normalize
                 File = Normalize(File)
                 input_file.append(File)
@@ -169,9 +184,12 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
 
     else:
         # Read file
-        File = ReadFile(path, verbose=0)
+        File = ReadFile(file_path, array=True, verbose=0)
         # Normalize
         File = Normalize(File)
+        File[File<=np.min(File)]=0
+        File[File>np.max(File)]=255
+        File[File==255]=1
         input_file = np.array(File, dtype=np.float32)
 
     return input_file

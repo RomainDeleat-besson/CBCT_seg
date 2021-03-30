@@ -1,7 +1,6 @@
 import os
 
 import tensorflow as tf
-from scipy import ndimage
 from tensorflow.keras import Input
 from tensorflow.keras import backend as keras
 from tensorflow.keras import layers
@@ -11,15 +10,17 @@ from tensorflow.keras.models import *
 from tensorflow.keras.optimizers import *
 
 
-def unet_2D(width, height, neighbors, NumberFilters=64, dropout=0.1):
+def unet_2D(width, height, neighbors, NumberFilters=64, dropout=0.1, learning_rate=0.0001):
 
-    tf.debugging.set_log_device_placement(True)
+    # tf.debugging.set_log_device_placement(True)
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
 
         inputs = Input((width, height, neighbors))
-
-        dataAug = layers.experimental.preprocessing.RandomRotation(0.5)(inputs)
+        rescale = layers.experimental.preprocessing.Rescaling(scale=1./255)(inputs)
+        
+        dataAug = layers.experimental.preprocessing.RandomFlip(mode="horizontal_and_vertical")(rescale)
+        dataAug = layers.experimental.preprocessing.RandomRotation(0.15)(dataAug)
         dataAug = layers.experimental.preprocessing.RandomTranslation(
             height_factor=0.1, width_factor=0.1)(dataAug)
 
@@ -91,22 +92,24 @@ def unet_2D(width, height, neighbors, NumberFilters=64, dropout=0.1):
         out = Conv2D(1, 1, activation = 'sigmoid')(conv9)
         model = Model(inputs, out)
 
-        model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
+        model.compile(optimizer = Adam(lr=learning_rate), loss = 'binary_crossentropy', metrics = ['accuracy'])
         model.summary()
 
-    return model
+        return model
 
 
 
-def unet_2D_deeper(width, height, neighbors, NumberFilters=32, dropout=0.1):
+def unet_2D_deeper(width, height, neighbors, NumberFilters=32, dropout=0.1, learning_rate=0.0001):
 
-    tf.debugging.set_log_device_placement(True)
+    # tf.debugging.set_log_device_placement(True)
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
 
         inputs = Input((width, height, neighbors))
-
-        dataAug = layers.experimental.preprocessing.RandomRotation(0.5)(inputs)
+        rescale = layers.experimental.preprocessing.Rescaling(scale=1./255)(inputs)
+        
+        dataAug = layers.experimental.preprocessing.RandomFlip(mode="horizontal_and_vertical")(rescale)
+        dataAug = layers.experimental.preprocessing.RandomRotation(0.15)(dataAug)
         dataAug = layers.experimental.preprocessing.RandomTranslation(
             height_factor=0.1, width_factor=0.1)(dataAug)
 
@@ -171,22 +174,24 @@ def unet_2D_deeper(width, height, neighbors, NumberFilters=32, dropout=0.1):
         out = Conv2D(1, 1, activation = 'sigmoid')(conv11)
         model = Model(inputs, out)
 
-        model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
+        model.compile(optimizer = Adam(lr=learning_rate), loss = 'binary_crossentropy', metrics = ['accuracy'])
         model.summary()
 
-    return model
+        return model
 
 
 
-def unet_2D_larger(width, height, neighbors, NumberFilters=64, dropout=0.1):
+def unet_2D_larger(width, height, neighbors, NumberFilters=64, dropout=0.1, learning_rate=0.0001):
 
-    tf.debugging.set_log_device_placement(True)
+    # tf.debugging.set_log_device_placement(True)
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
 
         inputs = Input((width, height, neighbors))
-
-        dataAug = layers.experimental.preprocessing.RandomRotation(0.5)(inputs)
+        rescale = layers.experimental.preprocessing.Rescaling(scale=1./255)(inputs)
+        
+        dataAug = layers.experimental.preprocessing.RandomFlip(mode="horizontal_and_vertical")(rescale)
+        dataAug = layers.experimental.preprocessing.RandomRotation(0.15)(dataAug)
         dataAug = layers.experimental.preprocessing.RandomTranslation(
             height_factor=0.1, width_factor=0.1)(dataAug)
 
@@ -258,10 +263,10 @@ def unet_2D_larger(width, height, neighbors, NumberFilters=64, dropout=0.1):
         out = Conv2D(1, 1, activation = 'sigmoid')(conv7)
         model = Model(inputs, out)
 
-        model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
+        model.compile(optimizer = Adam(lr=learning_rate), loss = 'binary_crossentropy', metrics = ['accuracy'])
         model.summary()
 
-    return model
+        return model
 
 
 
