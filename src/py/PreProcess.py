@@ -1,4 +1,5 @@
 import argparse
+import glob
 import os
 
 import itk
@@ -39,14 +40,13 @@ def main(args):
 		# 	shutil.rmtree(out)
 		# 	os.makedirs(out)
 		
-		img = ReadFile(image)
-		img = img.transpose()
+		img = ReadFile(image, array=True)
+		# img = img.transpose()
 		# print(img.dtype, img.min(), img.max())
 		
-		"""Normalization and contrast adjustment"""
+		print("Normalization and contrast adjustment")
 
 		img = Normalize(img,0,img.max(),out_min=0,out_max=255)
-
 		img = Adjust_Contrast(img,pmin=45,pmax=90)
 
 		Deconstruction(img, image, out, desired_width, desired_height)
