@@ -19,6 +19,7 @@ def main(args):
     InputdirValTrain = args.dir_valTrain
     InputdirValLabel = args.dir_valLabel
 
+    number_epochs = args.epochs
     neighborhood = args.neighborhood
     width = args.width
     height = args.height
@@ -83,13 +84,12 @@ def main(args):
     tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
     callbacks_list = [model_checkpoint, tensorboard_callback]
 
-    epochs = 20
     model.fit(
         x_train,
         y_train,
         batch_size=batch_size,
         validation_data=(x_val, y_val),
-        epochs=epochs,
+        epochs=number_epochs,
         shuffle=True,
         verbose=2,
         callbacks=callbacks_list,
@@ -109,13 +109,14 @@ if __name__ ==  '__main__':
     
     training_parameters = parser.add_argument_group('Universal ID parameters')
     training_parameters.add_argument('--model_name', type=str, help='name of the model', default='CBCT_seg_model')
+    training_parameters.add_argument('--epochs', type=int, help='name of the model', default=20)
     training_parameters.add_argument('--width', type=int, help='', default=512)
     training_parameters.add_argument('--height', type=int, help='', default=512)
     training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=32)
     training_parameters.add_argument('--learning_rate', type=float, help='', default=0.0001)
     training_parameters.add_argument('--number_filters', type=int, help='', default=64)
     training_parameters.add_argument('--dropout', type=float, help='', default=0.1)
-    training_parameters.add_argument('--neighborhood', type=int, choices=[3,5,7,9], help='neighborhood slices (3|5|7)', default=3)
+    training_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (3|5|7)', default=3)
  
     display = parser.add_argument_group('Universal ID parameters')
     display.add_argument('--display', type=int, help='', default=0)

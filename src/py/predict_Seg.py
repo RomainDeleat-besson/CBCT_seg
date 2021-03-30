@@ -48,23 +48,17 @@ def main(args):
     input_paths = sorted([os.path.join(Inputdir, fname) for fname in os.listdir(Inputdir) if not fname.startswith(".")])
     images = np.array([Array_2_5D(path, input_paths, width, height, neighborhood, label=False) for path in input_paths])
 
-    print("Prediction...")
     model = tf.keras.models.load_model(load_model)
-    predictions = model.predict(images)
-    # print(np.shape(prediction))
 
-    print("Saving...")
+    print("Prediction & Saving...")
     for i in range(np.shape(images)[0]):
+        image = np.reshape(images[i], (1,)+images[i].shape)
+        prediction = model.predict(image)
+        prediction[prediction<=0.5]=0
+        prediction[prediction>0.5]=1
         outputFilename = os.path.join(out, os.path.basename(input_paths[i]))
-
-        # print("Input path:", input_paths[i])
-        # print("Output path:", outputFilename)
-        # print()
-
-        # Attention, Etre sur que l'ordre des elements contenue dans la liste 
-        # prediction est bien le meme que l'ordre des files et donc que le nom des
-        # fichiers predis soient les bons
-        prediction = predictions[i]
+        prediction = np.reshape(prediction, [s for s in prediction.shape if s != 1])
+        prediction = np.reshape(prediction, prediction.shape+(1,))
         Save_png(outputFilename, prediction)
 
 
@@ -79,7 +73,7 @@ if __name__ ==  '__main__':
     predict_parameters = parser.add_argument_group('')
     predict_parameters.add_argument('--width', type=int, help='', default=512)
     predict_parameters.add_argument('--height', type=int, help='', default=512)
-    predict_parameters.add_argument('--neighborhood', type=int, choices=[3,5,7,9], help='neighborhood slices (3|5|7)', default=3)
+    predict_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (3|5|7)', default=3)
  
     model = parser.add_argument_group('')
     model.add_argument('--load_model', type=str, help='', required=True)  

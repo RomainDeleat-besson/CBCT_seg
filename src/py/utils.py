@@ -41,8 +41,13 @@ def SaveFile(filepath, data, ImageType=None, verbose=1):
         print("Saving:", filepath)
 
     ext = os.path.basename(filepath)
-
     filepath = filepath.replace('.gz','')
+
+    # if type(data).__module__ == np.__name__: 
+    #     print(type(data))
+    #     if ImageType is None: data = itk.GetImageFromArray(data)
+    #     else: data = itk.PyBuffer[ImageType].GetImageFromArray(data)
+
     if ImageType is None: writer = itk.ImageFileWriter.New()
     else: writer = itk.ImageFileWriter[ImageType].New()
     writer.SetFileName(filepath)
