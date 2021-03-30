@@ -1,40 +1,76 @@
+import glob
 import os
 import re
+import sys
 
 import imageio
 import itk
+import gzip
 import matplotlib.pyplot as plt
 import nibabel as nib
+import nrrd
 import numpy as np
 import tensorflow as tf
 from scipy import ndimage
 from skimage import exposure
-import sys
+
 # np.set_printoptions(threshold=sys.maxsize)
 
 # #####################################
 # Reading and Saving files
 # #####################################
 
-def ReadFile(filepath, verbose=1):
+def ReadFile(filepath, ImageType=None, array=False, verbose=1):
     if verbose == 1:
         print("Reading:", filepath)
     
-    scan = itk.imread(filepath)
-    scan = itk.GetArrayFromImage(scan)
+    # scan = itk.imread(filepath)
+
+    if ImageType is None: reader = itk.ImageFileReader.New(FileName=filepath)
+    else: reader = itk.ImageFileReader[ImageType].New(FileName=filepath)
+    reader.Update()
+    scan = reader.GetOutput()
+
+    if array: scan = itk.GetArrayFromImage(scan)
+
     return scan
 
 
-def SaveFile(filepath, data, verbose=1):
+def SaveFile(filepath, data, ImageType=None, verbose=1):
     if verbose == 1:
         print("Saving:", filepath)
 
     ext = os.path.basename(filepath)
+    filepath = filepath.replace('.gz','')
 
-    if ".png" in ext: Save_png(filepath, data)
+    if type(data).__module__ == np.__name__: 
+        print(type(data))
+        if ImageType is None: data = itk.GetImageFromArray(data)
+        else: data = itk.PyBuffer[ImageType].GetImageFromArray(data)
+
+    if ImageType is None: writer = itk.ImageFileWriter.New()
+    else: writer = itk.ImageFileWriter[ImageType].New()
+    writer.SetFileName(filepath)
+    writer.SetInput(data)
+    writer.Update()
+
+    # if ".png" in ext: Save_png(filepath, data)
+    # if ".nrrd" in ext: Save_nrrd(filepath, data)
+    if ".gz" in ext: Save_gz(filepath, data)
 
 def Save_png(filepath, data):
     imageio.imsave(filepath, data)
+
+def Save_nrrd(filepath, data):
+    # nrrd.write(filepath.replace('.gz', ''), data)
+    ImageType = itk.Image[itk.US, 3]
+    writer = itk.ImageFileWriter[ImageType].New(FileName=filepath.replace('.gz',''), Input=data)
+    writer.Update()
+
+def Save_gz(filepath, data):
+    with open(filepath.replace('.gz', ''), 'rb') as f_in, gzip.open(filepath, 'wb') as f_out:
+        f_out.writelines(f_in)
+    os.remove(filepath.replace('.gz', ''))
 
 
 # #####################################
@@ -84,11 +120,18 @@ def Resize_2D(img, desired_width, desired_height):
 
 def Deconstruction(img, filename, outdir, desired_width=512, desired_height=512):
     """Separate each slice of a 3D image"""
-    for z in range(img.shape[2]):
-        slice = img[:,:,z]
+    print(img.shape)
+    for z in range(img.shape[0]):
+        slice = img[z,:,:]
         out = outdir+'/'+os.path.basename(filename).split('.')[0]+'_'+str(z)+'.png'
         slice = Resize_2D(slice, desired_width, desired_height)
-        SaveFile(out, slice.astype(np.uint8), verbose=0)
+
+        ImageType = itk.Image[itk.UC,2]
+        slice = slice.astype(np.ubyte)
+        # slice = itk.PyBuffer[ImageType].GetImageFromArray(slice)
+        # slice = itk.GetImageFromArray(slice)
+        SaveFile(out, slice, ImageType, verbose=0)
+        # SaveFile(out, slice.astype(np.uint8), verbose=0)
 
 
 # #####################################
@@ -165,10 +208,45 @@ def Plot_slices(num_rows, num_columns, width, height, data):
 # Post-process functions
 # #####################################
 
-def Reconstruction(dir, outdir):
+def Reconstruction(filename, dir, original_img, outdir):
     """Reconstruction of a 3D scan from the 2D slices"""
+    size = original_img.shape
+    img = np.zeros(size)
+    normpath = os.path.normpath('/'.join([dir,filename+'*']))
+    for slice_path in glob.iglob(normpath):
+        slice = ReadFile(slice_path, array=True, verbose=0)
+        slice = Resize_2D(slice, size[1], size[2])
+        slice_nbr = int(re.split('_|\.',slice_path)[-2])
+        img[slice_nbr,:,:] = slice
+    return img
 
+def Resample(img, original_img_path):
 
+    ImageType = itk.Image[itk.US, 3]
+    original_img = ReadFile(original_img_path, ImageType=ImageType, verbose=0)
+
+    output_img = itk.ResampleImageFilter(
+        Input=img,
+        # # Interpolator=itk.LinearInterpolateImageFunction[ImageType, itk.D].New(img),
+        # Transform=itk.IdentityTransform[itk.D, 3].New(),
+        # OutputStartIndex=original_img.GetLargestPossibleRegion().GetIndex(),
+        # Size=original_img.GetLargestPossibleRegion().GetSize(),
+        # OutputSpacing=original_img.GetSpacing(),
+        # OutputOrigin=original_img.GetOrigin(),
+        # OutputDirection=original_img.GetDirection(),
+        OutputParametersFromImage=original_img
+    )
+    
+    # resample = itk.ResampleImageFilter[ImageType, ImageType].New(Input=img)
+    # resample.SetOutputParametersFromImage(original_img)
+    # resample.UpdateOutputInformation()
+    # resample.Update()
+    # output_img = resample.GetOutput()
+
+    # print(original_img)
+    # print(output_img)
+
+    return output_img
 
 
 
