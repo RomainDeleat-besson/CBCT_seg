@@ -4,11 +4,11 @@ import re
 import sys
 
 import imageio
+from skimage import io
 import itk
 import gzip
 import matplotlib.pyplot as plt
 import nibabel as nib
-import nrrd
 import numpy as np
 import tensorflow as tf
 from scipy import ndimage
@@ -22,6 +22,35 @@ from tensorflow.keras.preprocessing.image import save_img
 # #####################################
 # Reading and Saving files
 # #####################################
+
+def Read_nifti(filepath, verbose=1):
+    if verbose == 1:
+        print("Reading:", filepath)
+
+    img = nib.load(filepath)
+
+    return img
+
+def Read_nrrd():
+    print()
+
+def Read_png(filepath, verbose=1):
+    if verbose == 1:
+        print("Reading:", filepath)
+    img = io.imread(filepath)
+    return img
+
+
+def Save_nifti(data, filepath, verbose=1):
+    if verbose == 1:
+        print("Saving:", filepath)
+    nib.nifti1.save(data, filepath)
+
+
+
+
+
+
 
 def ReadFile(filepath, ImageType=None, array=False, verbose=1):
     if verbose == 1:
@@ -46,10 +75,9 @@ def SaveFile(filepath, data, ImageType=None, verbose=1):
     ext = os.path.basename(filepath)
     filepath = filepath.replace('.gz','')
 
-    # if type(data).__module__ == np.__name__: 
-    #     print(type(data))
-    #     if ImageType is None: data = itk.GetImageFromArray(data)
-    #     else: data = itk.PyBuffer[ImageType].GetImageFromArray(data)
+    if type(data).__module__ == np.__name__: 
+        if ImageType is None: data = itk.GetImageFromArray(data)
+        else: data = itk.PyBuffer[ImageType].GetImageFromArray(data)
 
     if ImageType is None: writer = itk.ImageFileWriter.New()
     else: writer = itk.ImageFileWriter[ImageType].New()
@@ -65,22 +93,11 @@ def Save_png(filepath, data):
     save_img(filepath, data)
     # imageio.imsave(filepath, data)
 
-def Save_nrrd(filepath, data):
-    # nrrd.write(filepath.replace('.gz', ''), data)
-    ImageType = itk.Image[itk.US, 3]
-    writer = itk.ImageFileWriter[ImageType].New(FileName=filepath.replace('.gz',''), Input=data)
-    writer.Update()
-
-def Save_gz(filepath, data):
-    with open(filepath.replace('.gz', ''), 'rb') as f_in, gzip.open(filepath, 'wb') as f_out:
-        f_out.writelines(f_in)
-    os.remove(filepath.replace('.gz', ''))
-
-def Save_nrrd(filepath, data):
-    # nrrd.write(filepath.replace('.gz', ''), data)
-    ImageType = itk.Image[itk.US, 3]
-    writer = itk.ImageFileWriter[ImageType].New(FileName=filepath.replace('.gz',''), Input=data)
-    writer.Update()
+# def Save_nrrd(filepath, data):
+#     # nrrd.write(filepath, data)
+#     ImageType = itk.Image[itk.US, 3]
+#     writer = itk.ImageFileWriter[ImageType].New(FileName=filepath.replace('.gz',''), Input=data)
+#     writer.Update()
 
 def Save_gz(filepath, data):
     with open(filepath.replace('.gz', ''), 'rb') as f_in, gzip.open(filepath, 'wb') as f_out:
@@ -180,16 +197,15 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
                 input_file.append(File)
 
         input_file = np.array(input_file, dtype=np.float32)
-        input_file = np.transpose(input_file)
+        input_file = np.reshape(input_file, (width, height, neighborhood))
 
     else:
         # Read file
         File = ReadFile(file_path, array=True, verbose=0)
         # Normalize
         File = Normalize(File)
-        File[File<=np.min(File)]=0
-        File[File>np.max(File)]=255
-        File[File==255]=1
+        File[File<(np.max(File))/2.0]=0
+        File[File>=(np.max(File))/2.0]=1
         input_file = np.array(File, dtype=np.float32)
 
     return input_file
@@ -232,39 +248,13 @@ def Reconstruction(filename, dir, original_img, outdir):
     img = np.zeros(size)
     normpath = os.path.normpath('/'.join([dir,filename+'*']))
     for slice_path in glob.iglob(normpath):
-        slice = ReadFile(slice_path, array=True, verbose=0)
+        slice = Read_png(slice_path, verbose=0)
         slice = Resize_2D(slice, size[1], size[2])
         slice_nbr = int(re.split('_|\.',slice_path)[-2])
         img[slice_nbr,:,:] = slice
     return img
 
-def Resample(img, original_img_path):
 
-    ImageType = itk.Image[itk.US, 3]
-    original_img = ReadFile(original_img_path, ImageType=ImageType, verbose=0)
-
-    output_img = itk.ResampleImageFilter(
-        Input=img,
-        # # Interpolator=itk.LinearInterpolateImageFunction[ImageType, itk.D].New(img),
-        # Transform=itk.IdentityTransform[itk.D, 3].New(),
-        # OutputStartIndex=original_img.GetLargestPossibleRegion().GetIndex(),
-        # Size=original_img.GetLargestPossibleRegion().GetSize(),
-        # OutputSpacing=original_img.GetSpacing(),
-        # OutputOrigin=original_img.GetOrigin(),
-        # OutputDirection=original_img.GetDirection(),
-        OutputParametersFromImage=original_img
-    )
-    
-    # resample = itk.ResampleImageFilter[ImageType, ImageType].New(Input=img)
-    # resample.SetOutputParametersFromImage(original_img)
-    # resample.UpdateOutputInformation()
-    # resample.Update()
-    # output_img = resample.GetOutput()
-
-    # print(original_img)
-    # print(output_img)
-
-    return output_img
 
 
 

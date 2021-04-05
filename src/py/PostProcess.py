@@ -2,6 +2,7 @@ import argparse
 import os
 
 import itk
+import nibabel as nib
 import numpy as np
 
 from utils import *
@@ -29,20 +30,26 @@ def main(args):
 		normpath = os.path.normpath("/".join([original_dir, '**',filename+'*']))
 		for img_fn in glob.iglob(normpath, recursive=True):
 			if filename in img_fn: original_img_paths.append(img_fn)
+
+
+
 	# print(original_img_paths)
 
-	ImageType = itk.Image[itk.F, 3]
 	for (filename,original_img_path) in zip(filenames,original_img_paths):
 		
-		print('Reconstruction: ',filename)
-		original_img = ReadFile(original_img_path, verbose=0)
-		img = Reconstruction(filename,dir,original_img,out)
-		img = img.astype(np.float32)
-		img = itk.PyBuffer[ImageType].GetImageFromArray(img)
+		original_img = Read_nifti(original_img_path)
 
-		img = Resample(img, original_img_path)
-		outfile = os.path.normpath('/'.join([out,filename+'.nrrd']))
-		SaveFile(outfile, img, ImageType)
+		img = Reconstruction(filename,dir,original_img,out)
+
+		header = original_img.header.copy()
+		img = nib.nifti1.Nifti1Image(img, None, header=header)
+
+		print(img.header)
+
+
+		outfile = os.path.normpath('/'.join([out,filename+'.nii']))
+		Save_nifti(img, outfile)
+		
 
 
 
