@@ -24,7 +24,7 @@ def main(args):
 	if args.dir:
 		normpath = os.path.normpath("/".join([args.dir, '*', '']))
 		for img_fn in glob.iglob(normpath, recursive=True):
-			if os.path.isfile(img_fn) and True in [ext in img_fn for ext in [".nrrd", ".nii", ".nii.gz", ".gipl", ".gipl.gz"]]:
+			if os.path.isfile(img_fn) and True in [ext in img_fn for ext in [".nrrd", ".nrrd.gz", ".nii", ".nii.gz", ".gipl", ".gipl.gz"]]:
 				img_obj = {}
 				img_obj["img"] = img_fn
 				img_obj["out"] = os.path.normpath("/".join([args.out]))
