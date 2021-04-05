@@ -8,7 +8,7 @@ import itk
 import gzip
 import matplotlib.pyplot as plt
 import nibabel as nib
-import nrrd
+# import nrrd
 import numpy as np
 import tensorflow as tf
 from scipy import ndimage
@@ -64,17 +64,6 @@ def SaveFile(filepath, data, ImageType=None, verbose=1):
 def Save_png(filepath, data):
     save_img(filepath, data)
     # imageio.imsave(filepath, data)
-
-def Save_nrrd(filepath, data):
-    # nrrd.write(filepath.replace('.gz', ''), data)
-    ImageType = itk.Image[itk.US, 3]
-    writer = itk.ImageFileWriter[ImageType].New(FileName=filepath.replace('.gz',''), Input=data)
-    writer.Update()
-
-def Save_gz(filepath, data):
-    with open(filepath.replace('.gz', ''), 'rb') as f_in, gzip.open(filepath, 'wb') as f_out:
-        f_out.writelines(f_in)
-    os.remove(filepath.replace('.gz', ''))
 
 def Save_nrrd(filepath, data):
     # nrrd.write(filepath.replace('.gz', ''), data)
