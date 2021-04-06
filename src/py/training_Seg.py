@@ -20,6 +20,7 @@ def main(args):
     InputdirValLabel = args.dir_valLabel
 
     number_epochs = args.epochs
+    save_frequence = args.save_frequence
     neighborhood = args.neighborhood
     width = args.width
     height = args.height
@@ -74,12 +75,33 @@ def main(args):
     print()
     print("=====================================================================")
 
+    print("image")
+    if np.any(x_train<0):
+        print("superieur a 0")    
+    if np.any(x_train>1):
+        print("superieur a 1")
+    if np.any(x_train>255):
+        print("superieur a 255")
+    print("max:", np.amax(x_train), " min:", np.amin(x_train))
+    print()
+    
+    print("label")
+    if np.any(y_train<0):
+        print("superieur a 0")    
+    if np.any(y_train>1):
+        print("superieur a 1")
+    if np.any(y_train>255):
+        print("superieur a 255")
+    print("max:", np.amax(y_train), " min:", np.amin(y_train))
+    print()
+
+    # model = unet(width, height, neighborhood)
 
     model = unet_2D(width, height, neighborhood, NumberFilters, dropout, lr)
     # model = unet_2D_deeper(width, height, neighborhood, 32, dropout, lr)
     # model = unet_2D_larger(width, height, neighborhood, 64, dropout, lr)
 
-    model_checkpoint = ModelCheckpoint(savedModel, monitor='loss',verbose=1, period=5)
+    model_checkpoint = ModelCheckpoint(savedModel, monitor='loss',verbose=1, period=save_frequence)
     log_dir = logPath+datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S")
     tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
     callbacks_list = [model_checkpoint, tensorboard_callback]
@@ -110,6 +132,7 @@ if __name__ ==  '__main__':
     training_parameters = parser.add_argument_group('Universal ID parameters')
     training_parameters.add_argument('--model_name', type=str, help='name of the model', default='CBCT_seg_model')
     training_parameters.add_argument('--epochs', type=int, help='name of the model', default=20)
+    training_parameters.add_argument('--save_frequence', type=int, help='name of the model', default=5)
     training_parameters.add_argument('--width', type=int, help='', default=512)
     training_parameters.add_argument('--height', type=int, help='', default=512)
     training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=32)
