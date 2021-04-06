@@ -1,72 +1,78 @@
 import glob
+import gzip
 import os
 import re
 import sys
 
 import imageio
-from skimage import io
 import itk
-import gzip
 import matplotlib.pyplot as plt
 import nibabel as nib
+import nrrd
 import numpy as np
 import tensorflow as tf
 from scipy import ndimage
-from skimage import exposure
+from skimage import exposure, io
 from tensorflow.keras.preprocessing.image import save_img
-
 # np.set_printoptions(threshold=sys.maxsize)
 
 
 
 # #####################################
-# Reading and Saving files
+# Reading files
 # #####################################
 
-def Read_nifti(filepath, verbose=1):
+def ReadFile(filepath, ImageType=None, verbose=1):
     if verbose == 1:
         print("Reading:", filepath)
+    
+    # img = itk.imread(filepath)
 
+    # if ImageType is None: reader = itk.ImageFileReader.New(FileName=filepath)
+    # else: reader = itk.ImageFileReader[ImageType].New(FileName=filepath)
+    # reader.Update()
+    # img = reader.GetOutput()
+
+    # if array: img = itk.GetArrayFromImage(img)
+
+    header = None
+
+    if '.nii' in filepath: img, header = Read_nifti(filepath)
+    if '.gipl' in filepath: img, header = Read_gipl(filepath)
+    if '.nrrd' in filepath: img, header = Read_nrrd(filepath)
+    if '.png' in filepath: img = Read_png(filepath)
+
+    return img, header
+
+def Read_nifti(filepath):
     img = nib.load(filepath)
+    header = img.header
+    img = img.get_fdata()
+    # qform = header.get_qform(coded=False)
+    # print(qform)
+    # qform[0,0] = -qform[0,0]
+    # qform[1,1] = -qform[1,1]
+    # print(qform)
+    # header.set_qform(qform, code='mni')
+    return img, header
 
-    return img
-
-def Read_nrrd():
+def Read_gipl(filepath):
+    # img, header = medpy.io.load(filepath)
+    # return img, header
     print()
 
-def Read_png(filepath, verbose=1):
-    if verbose == 1:
-        print("Reading:", filepath)
+def Read_nrrd(filepath):
+    img, header = nrrd.read(filepath) #, index_order='F'
+    return img, header
+
+def Read_png(filepath):
     img = io.imread(filepath)
     return img
 
 
-def Save_nifti(data, filepath, verbose=1):
-    if verbose == 1:
-        print("Saving:", filepath)
-    nib.nifti1.save(data, filepath)
-
-
-
-
-
-
-
-def ReadFile(filepath, ImageType=None, array=False, verbose=1):
-    if verbose == 1:
-        print("Reading:", filepath)
-    
-    # scan = itk.imread(filepath)
-
-    if ImageType is None: reader = itk.ImageFileReader.New(FileName=filepath)
-    else: reader = itk.ImageFileReader[ImageType].New(FileName=filepath)
-    reader.Update()
-    scan = reader.GetOutput()
-
-    if array: scan = itk.GetArrayFromImage(scan)
-
-    return scan
-
+# #####################################
+# Saving files
+# #####################################
 
 def SaveFile(filepath, data, ImageType=None, verbose=1):
     if verbose == 1:
@@ -75,29 +81,37 @@ def SaveFile(filepath, data, ImageType=None, verbose=1):
     ext = os.path.basename(filepath)
     filepath = filepath.replace('.gz','')
 
-    if type(data).__module__ == np.__name__: 
-        if ImageType is None: data = itk.GetImageFromArray(data)
-        else: data = itk.PyBuffer[ImageType].GetImageFromArray(data)
+    # if type(data).__module__ == np.__name__: 
+    #     if ImageType is None: data = itk.GetImageFromArray(data)
+    #     else: data = itk.PyBuffer[ImageType].GetImageFromArray(data)
 
-    if ImageType is None: writer = itk.ImageFileWriter.New()
-    else: writer = itk.ImageFileWriter[ImageType].New()
-    writer.SetFileName(filepath)
-    writer.SetInput(data)
-    writer.Update()
+    # if ImageType is None: writer = itk.ImageFileWriter.New()
+    # else: writer = itk.ImageFileWriter[ImageType].New()
+    # writer.SetFileName(filepath)
+    # writer.SetInput(data)
+    # writer.Update()
 
-    # if ".png" in ext: Save_png(filepath, data)
-    # if ".nrrd" in ext: Save_nrrd(filepath, data)
+    if ".png" in ext: Save_png(filepath, data)
+    if ".nrrd" in ext: Save_nrrd(filepath, data)
     if ".gz" in ext: Save_gz(filepath, data)
 
+
+def Save_nifti(data, filepath, verbose=1):
+    if verbose == 1:
+        print("Saving:", filepath)
+    nib.nifti1.save(data, filepath)
+
 def Save_png(filepath, data):
+    if data.ndim==2:
+        data = np.reshape(data, (data.shape[0],data.shape[1],1))
     save_img(filepath, data)
     # imageio.imsave(filepath, data)
 
-# def Save_nrrd(filepath, data):
-#     # nrrd.write(filepath, data)
-#     ImageType = itk.Image[itk.US, 3]
-#     writer = itk.ImageFileWriter[ImageType].New(FileName=filepath.replace('.gz',''), Input=data)
-#     writer.Update()
+def Save_nrrd(filepath, data):
+    nrrd.write(filepath, data)
+    # ImageType = itk.Image[itk.US, 3]
+    # writer = itk.ImageFileWriter[ImageType].New(FileName=filepath.replace('.gz',''), Input=data)
+    # writer.Update()
 
 def Save_gz(filepath, data):
     with open(filepath.replace('.gz', ''), 'rb') as f_in, gzip.open(filepath, 'wb') as f_out:
@@ -153,8 +167,8 @@ def Resize_2D(img, desired_width, desired_height):
 def Deconstruction(img, filename, outdir, desired_width=512, desired_height=512):
     """Separate each slice of a 3D image"""
     print(img.shape)
-    for z in range(img.shape[0]):
-        slice = img[z,:,:]
+    for z in range(img.shape[2]):
+        slice = img[:,:,z]
         out = outdir+'/'+os.path.basename(filename).split('.')[0]+'_'+str(z)+'.png'
         slice = Resize_2D(slice, desired_width, desired_height)
 
@@ -191,7 +205,7 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
 
             else:
                 # Read file
-                File = ReadFile(file_path, array=True, verbose=0)
+                File = ReadFile(file_path, verbose=0)
                 # Normalize
                 File = Normalize(File)
                 input_file.append(File)
@@ -201,7 +215,7 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
 
     else:
         # Read file
-        File = ReadFile(file_path, array=True, verbose=0)
+        File = ReadFile(file_path, verbose=0)
         # Normalize
         File = Normalize(File)
         File[File<(np.max(File))/2.0]=0
@@ -245,13 +259,14 @@ def Plot_slices(num_rows, num_columns, width, height, data):
 def Reconstruction(filename, dir, original_img, outdir):
     """Reconstruction of a 3D scan from the 2D slices"""
     size = original_img.shape
+    print(size)
     img = np.zeros(size)
     normpath = os.path.normpath('/'.join([dir,filename+'*']))
     for slice_path in glob.iglob(normpath):
-        slice = Read_png(slice_path, verbose=0)
-        slice = Resize_2D(slice, size[1], size[2])
+        slice, header = ReadFile(slice_path, verbose=0)
+        slice = Resize_2D(slice, size[0], size[1])
         slice_nbr = int(re.split('_|\.',slice_path)[-2])
-        img[slice_nbr,:,:] = slice
+        img[:,:,slice_nbr] = slice
     return img
 
 
