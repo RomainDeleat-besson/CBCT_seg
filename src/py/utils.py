@@ -22,7 +22,7 @@ from tensorflow.keras.preprocessing.image import save_img
 # Reading files
 # #####################################
 
-def ReadFile(filepath, ImageType=None, verbose=1):
+def ReadFile(filepath, verbose=1):
     if verbose == 1:
         print("Reading:", filepath)
     
@@ -188,40 +188,64 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
     neighbors = int((neighborhood-1)/2)
 
     if not label:
-        fname = os.path.basename(file_path)
-        fdir  = os.path.dirname(file_path)
+    #     fname = os.path.basename(file_path)
+    #     fdir  = os.path.dirname(file_path)
 
-        numberSlice = re.split('_|\.', fname)[-2]
+    #     numberSlice = re.split('_|\.', fname)[-2]
+        
+        
+    #     # print("==================================================")
+    #     # print("file path:", file_path)
 
-        neigh_paths, input_file = [], []
-        for slice in range(-neighbors,neighbors+1):
-            indexNumberSlice = fname.rfind(numberSlice)
-            new_fname = fname[:indexNumberSlice] + fname[indexNumberSlice:].replace(numberSlice, str(int(numberSlice)+slice))
+    #     neigh_paths, input_file = [], []
+    #     for slice in range(-neighbors,neighbors+1):
+    #         # print("slice:", slice)
+    #         indexNumberSlice = fname.rfind(numberSlice)
+    #         new_fname = fname[:indexNumberSlice] + fname[indexNumberSlice:].replace(numberSlice, str(int(numberSlice)+slice))
 
-            new_path = os.path.join(fdir,new_fname)
-            if new_path not in paths:
-                fake_slice = np.zeros((width, height), dtype=np.float32)
-                input_file.append(fake_slice)
+    #         new_path = os.path.join(fdir,new_fname)
+    #         # print("new path:", new_path)
+    #         if new_path not in paths:
+    #             fake_slice = np.zeros((width, height), dtype=np.float32)
+    #             input_file.append(fake_slice)
 
-            else:
-                # Read file
-                File = ReadFile(file_path, verbose=0)
-                # Normalize
-                File = Normalize(File)
-                input_file.append(File)
+    #         else:
+    #             # Read file
+    #             File = ReadFile(file_path, array=True, verbose=0)
+    #             # Normalize
+    #             File = Normalize(File, out_min=0,out_max=1)
+    #             input_file.append(File)
 
-        input_file = np.array(input_file, dtype=np.float32)
-        input_file = np.reshape(input_file, (width, height, neighborhood))
+        # Read file
+        File, _ = ReadFile(file_path, verbose=0)
+        # Normalize
+        # File = Normalize(File, out_min=0,out_max=1)
+        # input_file.append(File)
+        input_file = np.array(File, dtype=np.float32)
+        input_file = np.reshape(File, (width, height, 1))
+        
+        
+        # Save_png(os.path.join("../RezaProject/data/image_test/", os.path.basename(file_path)), input_file)
+
+        # input_file = np.array(input_file, dtype=np.float32)
+        # input_file = np.reshape(input_file, (width, height, neighborhood))
+        # print("==================================================")
 
     else:
         # Read file
-        File = ReadFile(file_path, verbose=0)
+        File, _ = ReadFile(file_path, verbose=0)
         # Normalize
-        File = Normalize(File)
-        File[File<(np.max(File))/2.0]=0
-        File[File>=(np.max(File))/2.0]=1
+        # File = Normalize(File)
+        
+        File[File<127.5]=0
+        File[File>=127.5]=1
+        
         input_file = np.array(File, dtype=np.float32)
-
+        input_file = np.reshape(File, (width, height, 1))
+        
+        
+        # Save_png(os.path.join("../RezaProject/data/label_test/", os.path.basename(file_path)), input_file)
+        
     return input_file
 
 

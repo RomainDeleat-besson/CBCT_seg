@@ -38,9 +38,8 @@ def main(args):
 		if not os.path.exists(out):
 			os.makedirs(out)
 		
-		img = ReadFile(image)
-		img = img.transpose()
-		img = Normalize(img)
+		img, _ = ReadFile(image, verbose=0)
+		img = Normalize(np.array(img))
 		
 		print("Deconstruction...")
 		Deconstruction(img, image, out, desired_width, desired_height)

@@ -50,16 +50,27 @@ def main(args):
 
     model = tf.keras.models.load_model(load_model)
 
+    if np.any(images<0):
+        print("superieur a 0")    
+    if np.any(images>1):
+        print("superieur a 1")
+    if np.any(images>255):
+        print("superieur a 255")
+    print("max:", np.amax(x_train), " min:", np.amin(x_train))
+    print()
+    
+    
     print("Prediction & Saving...")
     for i in range(np.shape(images)[0]):
         image = np.reshape(images[i], (1,)+images[i].shape)
         prediction = model.predict(image)
-        prediction[prediction<=0.5]=0
-        prediction[prediction>0.5]=1
+        # prediction[prediction<=0.5]=0
+        # prediction[prediction>0.05]=1
         outputFilename = os.path.join(out, os.path.basename(input_paths[i]))
-        prediction = np.reshape(prediction, [s for s in prediction.shape if s != 1])
-        prediction = np.reshape(prediction, prediction.shape+(1,))
+        prediction = np.reshape(prediction, (width, height, 1))
+        # prediction = np.reshape(prediction, prediction.shape+(1,))
         Save_png(outputFilename, prediction)
+
 
 
 
