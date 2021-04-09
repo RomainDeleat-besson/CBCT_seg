@@ -25,7 +25,7 @@ def main(args):
         os.makedirs(test_path+'/Scans/')
         os.makedirs(test_path+'/Segs/')
     for fold in range(args.cv_folds):
-        folds_normpath = os.path.normpath("/".join([train_path,'Fold_'+str(fold+1)]))
+        folds_normpath = os.path.normpath("/".join([train_path,str(fold+1)]))
         if not os.path.exists(folds_normpath):
             os.makedirs(folds_normpath+'/Scans/')
             os.makedirs(folds_normpath+'/Segs/')
@@ -73,7 +73,7 @@ def main(args):
             del seg_fn_array[nbr]
             
         for (scan_obj,seg_obj) in zip(scan_fn_array,seg_fn_array):
-            fold_path = os.path.normpath("/".join([train_path,'Fold_'+str(fold+1)]))
+            fold_path = os.path.normpath("/".join([train_path,str(fold+1)]))
             scan = scan_obj["img"]
             seg = seg_obj["img"]
             out_scan = fold_path+scan_obj["out"]
