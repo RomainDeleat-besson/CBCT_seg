@@ -30,25 +30,20 @@ def main(args):
 		normpath = os.path.normpath("/".join([original_dir, '**',filename+'*']))
 		for img_fn in glob.iglob(normpath, recursive=True):
 			if filename in img_fn: original_img_paths.append(img_fn)
-
-
-
 	# print(original_img_paths)
 
 	for (filename,original_img_path) in zip(filenames,original_img_paths):
 		
-		original_img = Read_nifti(original_img_path)
+		original_img, original_header = ReadFile(original_img_path)
+		if '.nii' in original_img_path: ext='.nii'
+		if '.gipl' in original_img_path: ext='.gipl'
+		if '.nrrd' in original_img_path: ext='.nrrd'
 
 		img = Reconstruction(filename,dir,original_img,out)
+		# header = GetHeader(original_img, original_header, ext)
 
-		header = original_img.header.copy()
-		img = nib.nifti1.Nifti1Image(img, None, header=header)
-
-		print(img.header)
-
-
-		outfile = os.path.normpath('/'.join([out,filename+'.nii']))
-		Save_nifti(img, outfile)
+		outfile = os.path.normpath('/'.join([out,filename+'_rec'+ext]))
+		SaveFile(outfile, img, original_header)
 		
 
 

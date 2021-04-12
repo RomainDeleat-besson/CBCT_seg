@@ -7,6 +7,7 @@ import sys
 import imageio
 import itk
 import matplotlib.pyplot as plt
+import medpy.io 
 import nibabel as nib
 import nrrd
 import numpy as np
@@ -14,9 +15,6 @@ import tensorflow as tf
 from scipy import ndimage
 from skimage import exposure, io
 from tensorflow.keras.preprocessing.image import save_img
-# np.set_printoptions(threshold=sys.maxsize)
-
-
 
 # #####################################
 # Reading files
@@ -48,21 +46,14 @@ def Read_nifti(filepath):
     img = nib.load(filepath)
     header = img.header
     img = img.get_fdata()
-    # qform = header.get_qform(coded=False)
-    # print(qform)
-    # qform[0,0] = -qform[0,0]
-    # qform[1,1] = -qform[1,1]
-    # print(qform)
-    # header.set_qform(qform, code='mni')
     return img, header
 
 def Read_gipl(filepath):
-    # img, header = medpy.io.load(filepath)
-    # return img, header
-    print()
+    img, header = medpy.io.load(filepath)
+    return img, header
 
 def Read_nrrd(filepath):
-    img, header = nrrd.read(filepath) #, index_order='F'
+    img, header = nrrd.read(filepath)
     return img, header
 
 def Read_png(filepath):
@@ -74,7 +65,7 @@ def Read_png(filepath):
 # Saving files
 # #####################################
 
-def SaveFile(filepath, data, ImageType=None, verbose=1):
+def SaveFile(filepath, data, header=None, verbose=1):
     if verbose == 1:
         print("Saving:", filepath)
 
@@ -86,37 +77,35 @@ def SaveFile(filepath, data, ImageType=None, verbose=1):
     #     else: data = itk.PyBuffer[ImageType].GetImageFromArray(data)
 
     # if ImageType is None: writer = itk.ImageFileWriter.New()
-    # else: writer = itk.ImageFileWriter[ImageType].New()
-    # writer.SetFileName(filepath)
-    # writer.SetInput(data)
+    # else: writer = itk.ImageFileWriter[ImageType].New(FileName=filepath, Input=data)
     # writer.Update()
 
     if ".png" in ext: Save_png(filepath, data)
-    if ".nrrd" in ext: Save_nrrd(filepath, data)
+    if ".nii" in ext: Save_nifti(filepath, data, header)
+    if ".gipl" in ext: Save_gipl(filepath, data, header)
+    if ".nrrd" in ext: Save_nrrd(filepath, data, header)
     if ".gz" in ext: Save_gz(filepath, data)
 
-
-def Save_nifti(data, filepath, verbose=1):
-    if verbose == 1:
-        print("Saving:", filepath)
+def Save_nifti(filepath, data, header):
+    data = nib.nifti1.Nifti1Image(data, None, header=header)
     nib.nifti1.save(data, filepath)
+
+def Save_gipl(filepath, data, header):
+    # from medpy.io import save
+    medpy.io.save(data, filepath, header)
+
+def Save_nrrd(filepath, data, header):
+    nrrd.write(filepath, data, header)
 
 def Save_png(filepath, data):
     if data.ndim==2:
         data = np.reshape(data, (data.shape[0],data.shape[1],1))
     save_img(filepath, data)
-    # imageio.imsave(filepath, data)
-
-def Save_nrrd(filepath, data):
-    nrrd.write(filepath, data)
-    # ImageType = itk.Image[itk.US, 3]
-    # writer = itk.ImageFileWriter[ImageType].New(FileName=filepath.replace('.gz',''), Input=data)
-    # writer.Update()
 
 def Save_gz(filepath, data):
-    with open(filepath.replace('.gz', ''), 'rb') as f_in, gzip.open(filepath, 'wb') as f_out:
+    with open(filepath, 'rb') as f_in, gzip.open(filepath+'.gz', 'wb') as f_out:
         f_out.writelines(f_in)
-    os.remove(filepath.replace('.gz', ''))
+    os.remove(filepath)
 
 
 # #####################################
@@ -133,7 +122,6 @@ def Normalize(input_file,in_min=None,in_max=None,out_min=0,out_max=255):
     return input_file
 
 def Adjust_Contrast(input,out_min=None,out_max=None,pmin=10,pmax=90):
-
     if out_min is None:
         out_min = input.min()
     if out_max is None:
@@ -142,10 +130,8 @@ def Adjust_Contrast(input,out_min=None,out_max=None,pmin=10,pmax=90):
     val_min, val_max = np.percentile(input[input!=0], (pmin, pmax))
     # print(val_min, val_max)
     input = Normalize(input, val_min,val_max, out_min,out_max)
-
     input = exposure.equalize_hist(input)
     # print(input.dtype, input.min(), input.max())
-
     input = Normalize(input, out_min=out_min, out_max=out_max)
 
     return input
@@ -176,7 +162,7 @@ def Deconstruction(img, filename, outdir, desired_width=512, desired_height=512)
         slice = slice.astype(np.ubyte)
         # slice = itk.PyBuffer[ImageType].GetImageFromArray(slice)
         # slice = itk.GetImageFromArray(slice)
-        SaveFile(out, slice, ImageType, verbose=0)
+        SaveFile(out, slice, verbose=0)
         # SaveFile(out, slice.astype(np.uint8), verbose=0)
 
 
@@ -292,27 +278,4 @@ def Reconstruction(filename, dir, original_img, outdir):
         slice_nbr = int(re.split('_|\.',slice_path)[-2])
         img[:,:,slice_nbr] = slice
     return img
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
