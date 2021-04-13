@@ -125,6 +125,8 @@ dir_test_postproc="${dir_test_postproc:-$dir_cv/Testing_PostProcessed}"
 dir_train_postproc="${dir_train_postproc:-$dir_cv/Training_PostProcessed}"
 cv_folds="${cv_folds:-10}"
 testing_percentage="${testing_percentage:-20}"
+min_percentage="${min_percentage:-45}"
+max_percentage="${max_percentage:-90}"
 model_name="${model_name:-CBCT_seg_model}"
 epochs="${epochs:-50}"
 save_frequence="${save_frequence:-5}"
@@ -152,6 +154,10 @@ do
     outdir=$(echo $dir | sed -e "s|${dir_test}|${dir_test_preproc}|g" -e "s|${dir_train}|${dir_train_preproc}|g")
     python3 $dir_src/src/py/PreProcess.py \
             --dir $dir/Scans \
+            --desired_width $width \
+            --desired_height $height \
+            --min_percentage $min_percentage \
+            --max_percentage $max_percentage \
             --out $outdir/Scans 
 
     python3 $dir_src/src/py/labels_preprocess.py \
