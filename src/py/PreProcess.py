@@ -12,6 +12,8 @@ def main(args):
 
 	desired_width = args.desired_width
 	desired_height = args.desired_height
+	min_percentage = args.min_percentage
+	max_percentage = args.max_percentage
 
 	img_fn_array = []
 
@@ -46,7 +48,7 @@ def main(args):
 		print("Normalization and contrast adjustment...")
 
 		img = Normalize(img,in_min=0,in_max=img.max(),out_min=0,out_max=255)
-		img = Adjust_Contrast(img,pmin=45,pmax=90)
+		img = Adjust_Contrast(img,pmin=min_percentage,pmax=max_percentage)
 
 		Deconstruction(img, image, out, desired_width, desired_height)
 
@@ -67,6 +69,10 @@ if __name__ ==  '__main__':
 	size_group = parser.add_argument_group('Resizing parameters')
 	size_group.add_argument('--desired_width', type=int, default=512)
 	size_group.add_argument('--desired_height', type=int, default=512)
+
+	contrast_group = parser.add_argument_group('Contrast parameters')
+	contrast_group.add_argument('--min_percentage', type=int, default=45)
+	contrast_group.add_argument('--max_percentage', type=int, default=90)
 
 	output_params = parser.add_argument_group('Output parameters')
 	output_params.add_argument('--out', type=str, help='Output directory')
