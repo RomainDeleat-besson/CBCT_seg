@@ -5,7 +5,7 @@ Help()
 # Display Help
 echo "Program to train and evaluate a 2D U-Net segmentation model"
 echo
-echo "Syntax: main_training.sh [-i|d|o|s|m|seed1|seed_end|nbr_folds|h]"
+echo "Syntax: main_training.sh [--options]"
 echo "options:"
 echo "--dir_project             Folder containing the project."
 echo "--dir_src                 Folder containing the scripts."
@@ -22,6 +22,8 @@ echo "--dir_test_postproc       Folder to save the postprocessed testing images"
 echo "--dir_train_postproc      Folder to save the postprocessed training images"
 echo "--cv_folds                Number of folds for the cross validation."
 echo "--testing_percentage      Percentage of images to keep for testing"
+echo "--min_percentage          Min percentage to threshold images for preprocessing"
+echo "--max_percentage          Max percentage to threshold images for preprocessing"
 echo "--model_name              Name of the model"
 echo "--epochs                  Number of epochs for training the models"
 echo "--save_frequence          Frequence of saving the models"
@@ -71,6 +73,10 @@ while [ "$1" != "" ]; do
             cv_folds=$1;;
         --testing_percentage )  shift
             testing_percentage=$1;;
+        --min_percentage )  shift
+            min_percentage=$1;;
+        --max_percentage )  shift
+            max_percentage=$1;;
         --model_name )  shift
             model_name=$1;;
         --epochs )  shift
