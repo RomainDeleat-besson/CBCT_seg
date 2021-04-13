@@ -35,9 +35,11 @@ def main(args):
 	for (filename,original_img_path) in zip(filenames,original_img_paths):
 		
 		original_img, original_header = ReadFile(original_img_path)
+		ext=''
 		if '.nii' in original_img_path: ext='.nii'
 		if '.gipl' in original_img_path: ext='.gipl'
 		if '.nrrd' in original_img_path: ext='.nrrd'
+		if '.gz' in original_img_path: ext=ext+'.gz'
 
 		img = Reconstruction(filename,dir,original_img,out)
 		# header = GetHeader(original_img, original_header, ext)
@@ -45,8 +47,6 @@ def main(args):
 		outfile = os.path.normpath('/'.join([out,filename+'_rec'+ext]))
 		SaveFile(outfile, img, original_header)
 		
-
-
 
 if __name__ ==  '__main__':
 	parser = argparse.ArgumentParser(description='Post-processing', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
