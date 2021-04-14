@@ -44,10 +44,13 @@ def augment(x, y):
 
 def main(args):
 
-    InputdirTrain = args.dir_train
-    InputdirLabel = args.dir_label
-    InputdirValTrain = args.dir_valTrain
-    InputdirValLabel = args.dir_valLabel
+    InputDir = args.dir_train
+    val_folds = args.val_folds
+
+    InputdirTrain = [os.path.join(InputDir,fold,'Scans') for fold in os.listdir(InputDir) if fold not in val_folds and not fold.startswith(".")]
+    InputdirLabel = [os.path.join(InputDir,fold,'Segs') for fold in os.listdir(InputDir) if fold not in val_folds and not fold.startswith(".")]
+    InputdirValTrain = [os.path.join(InputDir,fold,'Scans') for fold in val_folds]
+    InputdirValLabel = [os.path.join(InputDir,fold,'Segs') for fold in val_folds]
 
     number_epochs = args.epochs
     save_frequence = args.save_frequence
@@ -79,13 +82,12 @@ def main(args):
 
     print("Loading paths...")
     # Input files and labels
-    input_paths    = sorted([os.path.join(InputdirTrain, fname) for fname in os.listdir(InputdirTrain) if not fname.startswith(".")])
-    label_paths    = sorted([os.path.join(InputdirLabel, fname) for fname in os.listdir(InputdirLabel) if not fname.startswith(".")])
+    input_paths = sorted([file for file in [os.path.join(dir, fname) for dir in InputdirTrain for fname in os.listdir(dir)] if not os.path.basename(file).startswith(".")])
+    label_paths = sorted([file for file in [os.path.join(dir, fname) for dir in InputdirLabel for fname in os.listdir(dir)] if not os.path.basename(file).startswith(".")])
 
     # Folder with the validations scans and labels
-    ValInput_paths = sorted([os.path.join(InputdirValTrain, fname) for fname in os.listdir(InputdirValTrain) if not fname.startswith(".")])
-    ValLabel_paths = sorted([os.path.join(InputdirValLabel, fname) for fname in os.listdir(InputdirValLabel) if not fname.startswith(".")])
-
+    ValInput_paths = sorted([file for file in [os.path.join(dir, fname) for dir in InputdirValTrain for fname in os.listdir(dir)] if not os.path.basename(file).startswith(".")])
+    ValLabel_paths = sorted([file for file in [os.path.join(dir, fname) for dir in InputdirValLabel for fname in os.listdir(dir)] if not os.path.basename(file).startswith(".")])
 
     print("Pre-processing...")
     # Read and process the input files
@@ -100,67 +102,65 @@ def main(args):
     y_val = np.reshape(y_val, (width, height, 1))
 
 
-    print("Training...")
-    print("=====================================================================")
-    print()
-    print("Inputs shape:     ", np.shape(x_train), "min:", np.amin(x_train), "max:", np.amax(x_train), "unique:", len(np.unique(x_train)))
-    print("Labels shape:     ", np.shape(y_train), "min:", np.amin(y_train), "max:", np.amax(y_train), "unique:", len(np.unique(y_train)))
-    print("Val inputs shape: ", np.shape(x_val), "min:", np.amin(x_val), "max:", np.amax(x_val), "unique:", len(np.unique(x_val)))
-    print("Val labels shape: ", np.shape(y_val), "min:", np.amin(y_val), "max:", np.amax(y_val), "unique:", len(np.unique(y_val)))
-    print()
-    print("=====================================================================")
+    # print("Training...")
+    # print("=====================================================================")
+    # print()
+    # print("Inputs shape:     ", np.shape(x_train), "min:", np.amin(x_train), "max:", np.amax(x_train), "unique:", len(np.unique(x_train)))
+    # print("Labels shape:     ", np.shape(y_train), "min:", np.amin(y_train), "max:", np.amax(y_train), "unique:", len(np.unique(y_train)))
+    # print("Val inputs shape: ", np.shape(x_val), "min:", np.amin(x_val), "max:", np.amax(x_val), "unique:", len(np.unique(x_val)))
+    # print("Val labels shape: ", np.shape(y_val), "min:", np.amin(y_val), "max:", np.amax(y_val), "unique:", len(np.unique(y_val)))
+    # print()
+    # print("=====================================================================")
 
 
-    BATCH_SIZE = batch_size
-    AUTOTUNE = tf.data.experimental.AUTOTUNE
+    # BATCH_SIZE = batch_size
+    # AUTOTUNE = tf.data.experimental.AUTOTUNE
     
-    dataset_training = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-    dataset_training = dataset_training.map(augment, num_parallel_calls=AUTOTUNE)
-    dataset_training = dataset_training.shuffle(8*BATCH_SIZE)
-    dataset_training = dataset_training.batch(BATCH_SIZE)
-    dataset_training = dataset_training.prefetch(AUTOTUNE)
+    # dataset_training = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    # dataset_training = dataset_training.map(augment, num_parallel_calls=AUTOTUNE)
+    # dataset_training = dataset_training.shuffle(8*BATCH_SIZE)
+    # dataset_training = dataset_training.batch(BATCH_SIZE)
+    # dataset_training = dataset_training.prefetch(AUTOTUNE)
     
-    dataset_validation = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-    dataset_validation = dataset_validation.map(augment, num_parallel_calls=AUTOTUNE)
-    dataset_validation = dataset_validation.batch(BATCH_SIZE)
-    dataset_validation = dataset_validation.prefetch(AUTOTUNE)
+    # dataset_validation = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+    # dataset_validation = dataset_validation.map(augment, num_parallel_calls=AUTOTUNE)
+    # dataset_validation = dataset_validation.batch(BATCH_SIZE)
+    # dataset_validation = dataset_validation.prefetch(AUTOTUNE)
 
 
-    model = unet_2D(width, height, neighborhood, NumberFilters, dropout, lr)
-    # model = unet_2D_deeper(width, height, neighborhood, 32, dropout, lr)
-    # model = unet_2D_larger(width, height, neighborhood, 64, dropout, lr)
+    # model = unet_2D(width, height, neighborhood, NumberFilters, dropout, lr)
+    # # model = unet_2D_deeper(width, height, neighborhood, 32, dropout, lr)
+    # # model = unet_2D_larger(width, height, neighborhood, 64, dropout, lr)
 
-    model_checkpoint = ModelCheckpoint(savedModel, monitor='loss',verbose=1, period=save_frequence)
-    log_dir = logPath+datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S")
-    tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
-    callbacks_list = [model_checkpoint, tensorboard_callback]
+    # model_checkpoint = ModelCheckpoint(savedModel, monitor='loss',verbose=1, period=save_frequence)
+    # log_dir = logPath+datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S")
+    # tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
+    # callbacks_list = [model_checkpoint, tensorboard_callback]
 
-    model.fit(
-        dataset_training,
-        epochs=number_epochs,
-        batch_size=None,
-        validation_data=dataset_validation,
-        verbose=2,
-        callbacks=callbacks_list,
-        # x_train,
-        # y_train,
-        # batch_size=batch_size,
-        # validation_data=(x_val, y_val),
-        # epochs=number_epochs,
-        # shuffle=True,
-        # verbose=2,
-        # callbacks=callbacks_list,
-    )
+    # model.fit(
+    #     dataset_training,
+    #     epochs=number_epochs,
+    #     batch_size=None,
+    #     validation_data=dataset_validation,
+    #     verbose=2,
+    #     callbacks=callbacks_list,
+    #     # x_train,
+    #     # y_train,
+    #     # batch_size=batch_size,
+    #     # validation_data=(x_val, y_val),
+    #     # epochs=number_epochs,
+    #     # shuffle=True,
+    #     # verbose=2,
+    #     # callbacks=callbacks_list,
+    # )
 
 
 
 if __name__ ==  '__main__':
     parser = argparse.ArgumentParser(description='Training a neural network', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     training_path = parser.add_argument_group('Paths for the training')
-    training_path.add_argument('--dir_train', type=str, help='Input dir for the training folder', required=True)
-    training_path.add_argument('--dir_label', type=str, help='Input dir for the labeling folder', required=True)
-    training_path.add_argument('--dir_valTrain', type=str, help='Input dir for the validation folder', required=True)
-    training_path.add_argument('--dir_valLabel', type=str, help='Input dir for the validation folder', required=True)
+    training_path.add_argument('--dir_train', type=str, help='Input training folder', required=True)
+    training_path.add_argument('--val_folds', type=str, nargs="+", help='Fold of the cross-validation to keep for validation', required=True)
     training_path.add_argument('--save_model', type=str, help='Directory to save the model', required=True)
     training_path.add_argument('--log_dir', type=str, help='Directory for the logs of the model', required=True)
     
