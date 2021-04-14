@@ -176,7 +176,7 @@ do
     echo $cv_fold
     python3 $dir_src/src/py/training_Seg.py \
             --dir_train $dir_train \
-            --cv_fold $cv_fold \
+            --val_folds $cv_fold \
             --save_model $dir_model \
             --log_dir $dir_log \
             --model_name $model_name/$cv_fold \
