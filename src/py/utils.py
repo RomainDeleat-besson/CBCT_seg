@@ -7,7 +7,7 @@ import sys
 import imageio
 import itk
 import matplotlib.pyplot as plt
-import medpy.io 
+import medpy.io
 import nibabel as nib
 import nrrd
 import numpy as np
@@ -152,7 +152,7 @@ def Resize_2D(img, desired_width, desired_height):
 
 def Deconstruction(img, filename, outdir, desired_width=512, desired_height=512):
     """Separate each slice of a 3D image"""
-    print(img.shape)
+    # print(img.shape)
     for z in range(img.shape[2]):
         slice = img[:,:,z]
         out = outdir+'/'+os.path.basename(filename).split('.')[0]+'_'+str(z)+'.png'
@@ -221,32 +221,6 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
         input_file = np.array(File, dtype=np.float32)
                 
     return input_file
-
-# #####################################
-# Display functions
-# #####################################
-
-def Plot_slices(num_rows, num_columns, width, height, data):
-    """Plot a montage of CT slices"""
-    data = np.transpose(data)
-    data = np.reshape(data, (num_rows, num_columns, width, height))
-    rows_data, columns_data = data.shape[0], data.shape[1]
-    heights = [slc[0].shape[0] for slc in data]
-    widths = [slc.shape[1] for slc in data[0]]
-    fig_width = 12.0
-    fig_height = fig_width * sum(heights) / sum(widths)
-    f, axarr = plt.subplots(
-        rows_data,
-        columns_data,
-        figsize=(fig_width, fig_height),
-        gridspec_kw={"height_ratios": heights},
-    )
-    for i in range(rows_data):
-        for j in range(columns_data):
-            axarr[i, j].imshow(data[i][j], cmap="gray")
-            axarr[i, j].axis("off")
-    plt.subplots_adjust(wspace=0, hspace=0, left=0, right=1, bottom=0, top=1)
-    plt.show()
 
 
 # #####################################

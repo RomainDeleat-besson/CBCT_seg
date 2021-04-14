@@ -5,11 +5,11 @@ from tensorflow.keras import Input
 from tensorflow.keras import backend as keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import LearningRateScheduler, ModelCheckpoint
-from tensorflow.keras.metrics import AUC, Precision, Recall
 from tensorflow.keras.layers import *
+from tensorflow.keras.losses import BinaryCrossentropy
+from tensorflow.keras.metrics import AUC, Precision, Recall
 from tensorflow.keras.models import *
 from tensorflow.keras.optimizers import *
-from tensorflow.keras.losses import BinaryCrossentropy
 
 
 def unet_2D(width, height, neighbors, NumberFilters=64, dropout=0.1, learning_rate=0.0001):

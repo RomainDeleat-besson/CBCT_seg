@@ -203,7 +203,7 @@ do
             --width $width \
             --height $height \
             --neighborhood $neighborhood \
-            --out_dir $dir_predict
+            --out $dir_predict
 
     python3 $dir_src/src/py/PostProcess.py \
             --dir $dir_predict \
@@ -235,7 +235,7 @@ do
             --width $width \
             --height $height \
             --neighborhood $neighborhood \
-            --out_dir $dir_predict
+            --out $dir_predict
     
     python3 $dir_src/src/py/PostProcess.py \
             --dir $dir_predict \

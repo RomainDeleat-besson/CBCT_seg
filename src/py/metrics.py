@@ -158,7 +158,7 @@ if __name__ ==  '__main__':
     training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=32)
     training_parameters.add_argument('--learning_rate', type=float, help='', default=0.0001)
     training_parameters.add_argument('--number_filters', type=int, help='', default=64)
-    training_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (3|5|7)', default=3)
+    training_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (1|3|5|7)', default=1)
     training_parameters.add_argument('--cv_fold', type=int, help='number of the cross-validation fold', default=1)
 
 

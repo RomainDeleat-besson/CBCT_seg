@@ -89,7 +89,7 @@ python3 CBCT_seg/src/py/predict_Seg.py \
     --width $width \
     --height $height \
     --neighborhood $neighborhood \
-    --out_dir $dir_predict
+    --out $dir_predict
 
 python3 CBCT_seg/src/py/PostProcess.py \
     --dir $dir_predict \

@@ -15,7 +15,7 @@ def main(args):
 
     Inputdir = args.dir_predict
     load_model = args.load_model
-    out = args.out_dir
+    out = args.out
     
     neighborhood = args.neighborhood
     width = args.width
@@ -67,25 +67,19 @@ def main(args):
         Save_png(outputFilename, prediction)
 
 
-
-
-
-
 if __name__ ==  '__main__':
-    parser = argparse.ArgumentParser(description='', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    prediction_path = parser.add_argument_group('Paths for the prediction')
-    prediction_path.add_argument('--dir_predict', type=str, help='Input dir for the training folder', required=True)
+    parser = argparse.ArgumentParser(description='Prediction', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    prediction_path = parser.add_argument_group('Input files')
+    prediction_path.add_argument('--dir_predict', type=str, help='Input dir to be predicted', required=True)
     
-    predict_parameters = parser.add_argument_group('')
-    predict_parameters.add_argument('--width', type=int, help='', default=512)
-    predict_parameters.add_argument('--height', type=int, help='', default=512)
-    predict_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (3|5|7)', default=3)
- 
-    model = parser.add_argument_group('')
-    model.add_argument('--load_model', type=str, help='', required=True)  
+    predict_parameters = parser.add_argument_group('Predict parameters')
+    predict_parameters.add_argument('--width', type=int, default=512)
+    predict_parameters.add_argument('--height', type=int, default=512)
+    predict_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (1|3|5|7)', default=1)
+    predict_parameters.add_argument('--load_model', type=str, help='Path of the trained model', required=True)  
 
-    ouput = parser.add_argument_group('')
-    ouput.add_argument('--out_dir', type=str, help='', required=True) 
+    ouput = parser.add_argument_group('Output parameters')
+    ouput.add_argument('--out', type=str, help='output directory', required=True) 
 
 
     args = parser.parse_args()

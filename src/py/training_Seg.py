@@ -11,6 +11,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 from models import *
 from utils import *
 
+
 def remove_empty_slices(img, label):
 
     L = []
@@ -115,10 +116,10 @@ def main(args):
 
     x_train, y_train = remove_empty_slices(x_train, y_train)
 
-    x_train = np.reshape(x_train, (width, height, 1))
-    y_train = np.reshape(y_train, (width, height, 1))
-    x_val = np.reshape(x_val, (width, height, 1))
-    y_val = np.reshape(y_val, (width, height, 1))
+    x_train = np.reshape(x_train, x_train.shape+(1,))
+    y_train = np.reshape(y_train, y_train.shape+(1,))
+    x_val = np.reshape(x_val, x_val.shape+(1,))
+    y_val = np.reshape(y_val, y_val.shape+(1,))
 
 
     print("Training...")
@@ -136,13 +137,13 @@ def main(args):
     AUTOTUNE = tf.data.experimental.AUTOTUNE
     
     dataset_training = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-    dataset_training = dataset_training.map(augment, num_parallel_calls=AUTOTUNE)
+    dataset_training = dataset_training.map(augment)
     dataset_training = dataset_training.shuffle(8*BATCH_SIZE)
     dataset_training = dataset_training.batch(BATCH_SIZE)
     dataset_training = dataset_training.prefetch(AUTOTUNE)
     
     dataset_validation = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-    dataset_validation = dataset_validation.map(augment, num_parallel_calls=AUTOTUNE)
+    dataset_validation = dataset_validation.map(augment)
     dataset_validation = dataset_validation.batch(BATCH_SIZE)
     dataset_validation = dataset_validation.prefetch(AUTOTUNE)
 
@@ -177,28 +178,24 @@ def main(args):
 
 if __name__ ==  '__main__':
     parser = argparse.ArgumentParser(description='Training a neural network', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    training_path = parser.add_argument_group('Paths for the training')
+    training_path = parser.add_argument_group('Input files')
     training_path.add_argument('--dir_train', type=str, help='Input training folder', required=True)
     training_path.add_argument('--val_folds', type=str, nargs="+", help='Fold of the cross-validation to keep for validation', required=True)
     training_path.add_argument('--save_model', type=str, help='Directory to save the model', required=True)
     training_path.add_argument('--log_dir', type=str, help='Directory for the logs of the model', required=True)
     
-    training_parameters = parser.add_argument_group('Universal ID parameters')
+    training_parameters = parser.add_argument_group('training parameters')
     training_parameters.add_argument('--model_name', type=str, help='name of the model', default='CBCT_seg_model')
-    training_parameters.add_argument('--epochs', type=int, help='name of the model', default=20)
-    training_parameters.add_argument('--save_frequence', type=int, help='name of the model', default=5)
-    training_parameters.add_argument('--width', type=int, help='', default=512)
-    training_parameters.add_argument('--height', type=int, help='', default=512)
-    training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=32)
-    training_parameters.add_argument('--learning_rate', type=float, help='', default=0.0001)
-    training_parameters.add_argument('--number_filters', type=int, help='', default=64)
-    training_parameters.add_argument('--dropout', type=float, help='', default=0.1)
-    training_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (3|5|7)', default=3)
- 
-    display = parser.add_argument_group('Universal ID parameters')
-    display.add_argument('--display', type=int, help='', default=0)
+    training_parameters.add_argument('--epochs', type=int, help='number of epochs', default=20)
+    training_parameters.add_argument('--save_frequence', type=int, help='epoch frequence to save the model', default=5)
+    training_parameters.add_argument('--width', type=int, default=512)
+    training_parameters.add_argument('--height', type=int, default=512)
+    training_parameters.add_argument('--batch_size', type=int, help='batch size value', default=32)
+    training_parameters.add_argument('--learning_rate', type=float, help='learning rate', default=0.0001)
+    training_parameters.add_argument('--number_filters', type=int, help='number of filters', default=64)
+    training_parameters.add_argument('--dropout', type=float, help='dropout', default=0.1)
+    training_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (1|3|5|7)', default=1)
        
-
     args = parser.parse_args()
 
     main(args)

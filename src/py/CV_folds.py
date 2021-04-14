@@ -87,14 +87,14 @@ def main(args):
 if __name__ ==  '__main__':
     parser = argparse.ArgumentParser(description='Creation of the cross-validation folders', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    input_params = parser.add_argument_group('Input file')
+    input_params = parser.add_argument_group('Input files')
     input_params.add_argument('--dir', type=str, help='Input directory with 3D images', required=True)
 
     output_params = parser.add_argument_group('Output parameters')
     output_params.add_argument('--out', type=str, help='Output directory', required=True)
     output_params.add_argument('--cv_folds', type=int, help='Number of folds to create', default=10)
     testing_params = output_params.add_mutually_exclusive_group()
-    testing_params.add_argument('--testing_number', type=int, help='Number of scans to keep for testing')
+    testing_params.add_argument('--testing_number', type=int, help='Number of scans to keep for testing', default=1)
     testing_params.add_argument('--testing_percentage', type=int, help='Percentage of scans to keep for testing', default=20)
 
     args = parser.parse_args()

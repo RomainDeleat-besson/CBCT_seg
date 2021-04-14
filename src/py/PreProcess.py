@@ -50,15 +50,10 @@ def main(args):
 		Deconstruction(img, image, out, desired_width, desired_height)
 
 		
-
-
-
-
-
 if __name__ ==  '__main__':
 	parser = argparse.ArgumentParser(description='Pre-processing', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-	input_group = parser.add_argument_group('Input file')
+	input_group = parser.add_argument_group('Input files')
 	input_params = input_group.add_mutually_exclusive_group(required=True)
 	input_params.add_argument('--image', type=str, help='Input 3D image')
 	input_params.add_argument('--dir', type=str, help='Input directory with 3D images')

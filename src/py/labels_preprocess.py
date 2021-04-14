@@ -38,32 +38,27 @@ def main(args):
 		if not os.path.exists(out):
 			os.makedirs(out)
 		
-		img, _ = ReadFile(image, verbose=0)
+		img, _ = ReadFile(image, verbose=1)
 		img = Normalize(np.array(img))
 		
 		print("Deconstruction...")
 		Deconstruction(img, image, out, desired_width, desired_height)
 
-		
-
-
-
-
 
 if __name__ ==  '__main__':
-	parser = argparse.ArgumentParser(description='Pre-processing', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+	parser = argparse.ArgumentParser(description='Label pre-processing', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-	input_group = parser.add_argument_group('Input file')
+	input_group = parser.add_argument_group('Input files')
 	input_params = input_group.add_mutually_exclusive_group(required=True)
-	input_params.add_argument('--image', type=str, help='Input 3D image')
-	input_params.add_argument('--dir', type=str, help='Input directory with 3D images')
+	input_params.add_argument('--image', type=str, help='Input 3D label')
+	input_params.add_argument('--dir', type=str, help='Input directory with 3D labels')
 
 	size_group = parser.add_argument_group('Resizing parameters')
 	size_group.add_argument('--desired_width', type=int, default=512)
 	size_group.add_argument('--desired_height', type=int, default=512)
 
 	output_params = parser.add_argument_group('Output parameters')
-	output_params.add_argument('--out', type=str, help='Output directory')
+	output_params.add_argument('--out', type=str, help='Output directory of the label slices')
 
 	args = parser.parse_args()
 
