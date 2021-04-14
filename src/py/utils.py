@@ -158,8 +158,8 @@ def Deconstruction(img, filename, outdir, desired_width=512, desired_height=512)
         out = outdir+'/'+os.path.basename(filename).split('.')[0]+'_'+str(z)+'.png'
         slice = Resize_2D(slice, desired_width, desired_height)
 
-        ImageType = itk.Image[itk.UC,2]
-        slice = slice.astype(np.ubyte)
+        # ImageType = itk.Image[itk.UC,2]
+        # slice = slice.astype(np.ubyte)
         # slice = itk.PyBuffer[ImageType].GetImageFromArray(slice)
         # slice = itk.GetImageFromArray(slice)
         SaveFile(out, slice, verbose=0)

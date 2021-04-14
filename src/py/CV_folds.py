@@ -4,9 +4,6 @@ import os
 import random
 import shutil
 
-import itk
-import numpy as np
-
 from utils import *
 
 
