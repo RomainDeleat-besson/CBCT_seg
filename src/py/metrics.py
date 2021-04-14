@@ -62,7 +62,7 @@ def main(args):
     if args.pred_dir:
         normpath_img = os.path.normpath("/".join([args.pred_dir, '*', '']))
         normpath_GT = os.path.normpath("/".join([args.groundtruth_dir, '*', '']))
-        for (img_fn, GT_fn) in zip(glob.iglob(normpath_img, recursive=True), glob.iglob(normpath_GT, recursive=True)):
+        for (img_fn, GT_fn) in zip(sorted(glob.iglob(normpath_img, recursive=True)), sorted(glob.iglob(normpath_GT, recursive=True))):
             if os.path.isfile(img_fn) and True in [ext in img_fn for ext in [".nrrd", ".nrrd.gz", ".nii", ".nii.gz", ".gipl", ".gipl.gz"]]:
                 img_obj = {}
                 img_obj["img"] = img_fn
@@ -70,20 +70,20 @@ def main(args):
                 img_fn_array.append(img_obj)
 
     auc = f1 = acc = sensitivity = precision = []
-    
+
     for img_obj in img_fn_array:
         pred = img_obj["img"]
         GT = img_obj["GT"]
 
-        pred = ReadFile(pred, array=True)
-        GT = ReadFile(GT, array=True, verbose=0)
+        pred, _ = ReadFile(pred)
+        GT, _ = ReadFile(GT, verbose=0)
 
-        pred = Normalize(pred,out_min=0,out_max=1)
-        GT = Normalize(GT,out_min=0,out_max=1)
-        pred[pred<=0.5]=0
-        pred[pred>0.5]=1
-        GT[GT<=0.5]=0
-        GT[GT>0.5]=1
+        # pred = Normalize(pred,out_min=0,out_max=1)
+        # GT = Normalize(GT,out_min=0,out_max=1)
+        # pred[pred<=0.5]=0
+        # pred[pred>0.5]=1
+        # GT[GT<=0.5]=0
+        # GT[GT>0.5]=1
 
         for slice in range(len(pred)):
             slice_pred = pred[slice]
@@ -101,7 +101,7 @@ def main(args):
                             sensitivity.append(metrics.recall_score(row_GT, row_pred))
                             precision.append(metrics.precision_score(row_GT, row_pred))
                         except:
-                            print('error slice:', slice, 'row:', row)
+                            # print('error slice:', slice, 'row:', row)
                             pass
 
 
@@ -152,7 +152,7 @@ if __name__ ==  '__main__':
     output_params.add_argument('--out', type=str, help='Output filename', required=True)
     output_params.add_argument('--sheet_name', type=str, help='Name of the excel sheet to write on', default='Sheet1')
 
-    training_parameters = parser.add_argument_group('Universal ID parameters')
+    training_parameters = parser.add_argument_group('Training parameters')
     training_parameters.add_argument('--model_name', type=str, help='name of the model', default='CBCT_seg_model')
     training_parameters.add_argument('--epochs', type=int, help='name of the model', default=20)
     training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=32)
