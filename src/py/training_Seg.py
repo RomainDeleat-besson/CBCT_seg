@@ -11,6 +11,23 @@ from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 from models import *
 from utils import *
 
+def remove_empty_slices(img, label):
+
+    L = []
+    for i in range(img.shape[0]):
+        if np.count_nonzero(label[i]) == 0:
+            L.append(i)
+            
+    L = np.array(L)
+    np.random.shuffle(L)
+    L = L[:int(0.66*L.shape[0])].tolist()
+
+    print("Before:", img.shape, end='   After: ')
+    img = np.delete(img, L, axis=0)
+    label = np.delete(label, L, axis=0) 
+    print(img.shape)
+    
+    return img, label
 
 def map_decorator(func):
     def wrapper(*args):
@@ -93,6 +110,8 @@ def main(args):
     y_train    = np.array([Array_2_5D(path, label_paths, width, height, neighborhood,label=True) for path in label_paths])
     x_val      = np.array([Array_2_5D(path, ValInput_paths, width, height, neighborhood,label=False) for path in ValInput_paths])
     y_val      = np.array([Array_2_5D(path, ValLabel_paths, width, height, neighborhood,label=True) for path in ValLabel_paths])
+
+    x_train, y_train = remove_empty_slices(x_train, y_train)
 
     x_train = np.reshape(x_train, (width, height, 1))
     y_train = np.reshape(y_train, (width, height, 1))
