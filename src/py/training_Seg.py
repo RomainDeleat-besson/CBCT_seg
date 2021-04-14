@@ -102,57 +102,57 @@ def main(args):
     y_val = np.reshape(y_val, (width, height, 1))
 
 
-    # print("Training...")
-    # print("=====================================================================")
-    # print()
-    # print("Inputs shape:     ", np.shape(x_train), "min:", np.amin(x_train), "max:", np.amax(x_train), "unique:", len(np.unique(x_train)))
-    # print("Labels shape:     ", np.shape(y_train), "min:", np.amin(y_train), "max:", np.amax(y_train), "unique:", len(np.unique(y_train)))
-    # print("Val inputs shape: ", np.shape(x_val), "min:", np.amin(x_val), "max:", np.amax(x_val), "unique:", len(np.unique(x_val)))
-    # print("Val labels shape: ", np.shape(y_val), "min:", np.amin(y_val), "max:", np.amax(y_val), "unique:", len(np.unique(y_val)))
-    # print()
-    # print("=====================================================================")
+    print("Training...")
+    print("=====================================================================")
+    print()
+    print("Inputs shape:     ", np.shape(x_train), "min:", np.amin(x_train), "max:", np.amax(x_train), "unique:", len(np.unique(x_train)))
+    print("Labels shape:     ", np.shape(y_train), "min:", np.amin(y_train), "max:", np.amax(y_train), "unique:", len(np.unique(y_train)))
+    print("Val inputs shape: ", np.shape(x_val), "min:", np.amin(x_val), "max:", np.amax(x_val), "unique:", len(np.unique(x_val)))
+    print("Val labels shape: ", np.shape(y_val), "min:", np.amin(y_val), "max:", np.amax(y_val), "unique:", len(np.unique(y_val)))
+    print()
+    print("=====================================================================")
 
 
-    # BATCH_SIZE = batch_size
-    # AUTOTUNE = tf.data.experimental.AUTOTUNE
+    BATCH_SIZE = batch_size
+    AUTOTUNE = tf.data.experimental.AUTOTUNE
     
-    # dataset_training = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-    # dataset_training = dataset_training.map(augment, num_parallel_calls=AUTOTUNE)
-    # dataset_training = dataset_training.shuffle(8*BATCH_SIZE)
-    # dataset_training = dataset_training.batch(BATCH_SIZE)
-    # dataset_training = dataset_training.prefetch(AUTOTUNE)
+    dataset_training = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    dataset_training = dataset_training.map(augment, num_parallel_calls=AUTOTUNE)
+    dataset_training = dataset_training.shuffle(8*BATCH_SIZE)
+    dataset_training = dataset_training.batch(BATCH_SIZE)
+    dataset_training = dataset_training.prefetch(AUTOTUNE)
     
-    # dataset_validation = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-    # dataset_validation = dataset_validation.map(augment, num_parallel_calls=AUTOTUNE)
-    # dataset_validation = dataset_validation.batch(BATCH_SIZE)
-    # dataset_validation = dataset_validation.prefetch(AUTOTUNE)
+    dataset_validation = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+    dataset_validation = dataset_validation.map(augment, num_parallel_calls=AUTOTUNE)
+    dataset_validation = dataset_validation.batch(BATCH_SIZE)
+    dataset_validation = dataset_validation.prefetch(AUTOTUNE)
 
 
-    # model = unet_2D(width, height, neighborhood, NumberFilters, dropout, lr)
-    # # model = unet_2D_deeper(width, height, neighborhood, 32, dropout, lr)
-    # # model = unet_2D_larger(width, height, neighborhood, 64, dropout, lr)
+    model = unet_2D(width, height, neighborhood, NumberFilters, dropout, lr)
+    # model = unet_2D_deeper(width, height, neighborhood, 32, dropout, lr)
+    # model = unet_2D_larger(width, height, neighborhood, 64, dropout, lr)
 
-    # model_checkpoint = ModelCheckpoint(savedModel, monitor='loss',verbose=1, period=save_frequence)
-    # log_dir = logPath+datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S")
-    # tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
-    # callbacks_list = [model_checkpoint, tensorboard_callback]
+    model_checkpoint = ModelCheckpoint(savedModel, monitor='loss',verbose=1, period=save_frequence)
+    log_dir = logPath+datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S")
+    tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
+    callbacks_list = [model_checkpoint, tensorboard_callback]
 
-    # model.fit(
-    #     dataset_training,
-    #     epochs=number_epochs,
-    #     batch_size=None,
-    #     validation_data=dataset_validation,
-    #     verbose=2,
-    #     callbacks=callbacks_list,
-    #     # x_train,
-    #     # y_train,
-    #     # batch_size=batch_size,
-    #     # validation_data=(x_val, y_val),
-    #     # epochs=number_epochs,
-    #     # shuffle=True,
-    #     # verbose=2,
-    #     # callbacks=callbacks_list,
-    # )
+    model.fit(
+        dataset_training,
+        epochs=number_epochs,
+        batch_size=None,
+        validation_data=dataset_validation,
+        verbose=2,
+        callbacks=callbacks_list,
+        # x_train,
+        # y_train,
+        # batch_size=batch_size,
+        # validation_data=(x_val, y_val),
+        # epochs=number_epochs,
+        # shuffle=True,
+        # verbose=2,
+        # callbacks=callbacks_list,
+    )
 
 
 
