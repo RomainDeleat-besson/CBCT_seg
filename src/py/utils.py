@@ -14,6 +14,7 @@ import tensorflow as tf
 from scipy import ndimage
 from skimage import exposure, io
 from tensorflow.keras.preprocessing.image import save_img
+
 # np.set_printoptions(threshold=sys.maxsize)
 
 
@@ -218,36 +219,23 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
 
         # Read file
         File, _ = ReadFile(file_path, verbose=0)
-        # Normalize
-        # File = Normalize(File, out_min=0,out_max=1)
-        # input_file.append(File)
+
+        if np.amax(File)>0:
+            File = (File-np.amin(File))/(np.amax(File)-np.amin(File))
+            
+        File = np.float32(np.uint8(255*File))/255
+
         input_file = np.array(File, dtype=np.float32)
-        input_file = np.reshape(File, (width, height, 1))
         
-        
-        # Save_png(os.path.join("../RezaProject/data/image_test/", os.path.basename(file_path)), input_file)
-
-        # input_file = np.array(input_file, dtype=np.float32)
-        # input_file = np.reshape(input_file, (width, height, neighborhood))
-        # print("==================================================")
-
     else:
-        # Read file
         File, _ = ReadFile(file_path, verbose=0)
-        # Normalize
-        # File = Normalize(File)
         
         File[File<127.5]=0
         File[File>=127.5]=1
-        
+                
         input_file = np.array(File, dtype=np.float32)
-        input_file = np.reshape(File, (width, height, 1))
-        
-        
-        # Save_png(os.path.join("../RezaProject/data/label_test/", os.path.basename(file_path)), input_file)
-        
+                
     return input_file
-
 
 # #####################################
 # Display functions

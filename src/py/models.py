@@ -5,6 +5,7 @@ from tensorflow.keras import Input
 from tensorflow.keras import backend as keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import LearningRateScheduler, ModelCheckpoint
+from tensorflow.keras.metrics import AUC, Precision, Recall
 from tensorflow.keras.layers import *
 from tensorflow.keras.models import *
 from tensorflow.keras.optimizers import *
@@ -18,15 +19,8 @@ def unet_2D(width, height, neighbors, NumberFilters=64, dropout=0.1, learning_ra
     with strategy.scope():
 
         inputs = Input((width, height, neighbors))
-        rescale = layers.experimental.preprocessing.Rescaling(scale=1./255)(inputs)
-        
-        dataAug = layers.experimental.preprocessing.RandomFlip(mode="horizontal_and_vertical")(rescale)
-        dataAug = layers.experimental.preprocessing.RandomRotation(0.1)(dataAug)
-        dataAug = layers.experimental.preprocessing.RandomTranslation(
-            height_factor=0.05, width_factor=0.05)(dataAug)
 
-        # ATTENTION A LA FIN DE LA LIGNE 96
-        conv1 = Conv2D(1*NumberFilters, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(dataAug) #ICI
+        conv1 = Conv2D(1*NumberFilters, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(inputs)
         # conv1 = layers.BatchNormalization()(conv1)
         conv1 = Conv2D(1*NumberFilters, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv1)
         # conv1 = layers.BatchNormalization()(conv1)
@@ -94,7 +88,7 @@ def unet_2D(width, height, neighbors, NumberFilters=64, dropout=0.1, learning_ra
         out = Conv2D(1, 1, activation = 'sigmoid')(conv9)
         model = Model(inputs, out)
 
-        model.compile(optimizer = Adam(lr=learning_rate), loss = BinaryCrossentropy(), metrics = [tf.keras.metrics.Precision(), tf.keras.metrics.Recall()])
+        model.compile(optimizer = Adam(lr=learning_rate), loss = BinaryCrossentropy(), metrics = [Precision(), Recall(), AUC()])
         model.summary()
 
         return model
