@@ -1,6 +1,7 @@
 import glob
 import gzip
 import os
+import random
 import re
 import sys
 
@@ -11,6 +12,7 @@ import medpy.io
 import nibabel as nib
 import nrrd
 import numpy as np
+import skimage.transform as sktf
 import tensorflow as tf
 from scipy import ndimage
 from skimage import exposure, io
@@ -221,6 +223,79 @@ def Array_2_5D(file_path, paths, width, height, neighborhood, label):
         input_file = np.array(File, dtype=np.float32)
                 
     return input_file
+
+# #####################################
+# Data Aug & Dataset
+# #####################################
+
+def _rotate (img, k):
+    return sktf.rotate(img, angle=k, mode='constant', cval=0.0, resize=False)
+
+def _shift (img, k, axis): # shape: (H,W,C)
+    x = np.roll(img, k, axis)
+    if k > 0 and axis == 0: x[:k,:,:] = 0
+    if k < 0 and axis == 0: x[k:,:,:] = 0
+    if k > 0 and axis == 1: x[:,:k,:] = 0
+    if k < 0 and axis == 1: x[:,k:,:] = 0
+    return x
+
+def _shear (img, k):
+    return sktf.warp(img, sktf.AffineTransform(shear=k), order=1, preserve_range=True, mode='constant', cval=0.0)
+
+def _centerZoom (img, k):
+    return sktf.resize(img[k:-k, k:-k, :], img.shape, anti_aliasing=False)
+
+def map_decorator(func):
+    def wrapper(*args):
+        return tf.py_function(
+            func=func,
+            inp=[*args],
+            Tout=[a.dtype for a in args])
+    return wrapper
+
+def aug_layers (x, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom):
+    x = x.numpy()
+    x = _rotate(x, seed_rot)           # Angle in degrees
+    x = _shift(x, seed_shift0, axis=0) # Shift in pixels
+    x = _shift(x, seed_shift1, axis=1) # Shift in pixels
+    x = _shear(x, seed_shear)          # Recommended range: [-0.2, 0.2]
+    x = _centerZoom(x, seed_zoom+1)    # Zoom in pixels (+1 to avoid empty array if k=0)
+    return x
+    
+@map_decorator
+def augment(x, y):
+    # random module much faster than numpy
+    seed_rot = int(random.uniform(0, 360))
+    seed_shift0 = int(random.uniform(-30, 30))
+    seed_shift1 = int(random.uniform(-30, 30))
+    seed_shear = random.uniform(-0.2, 0.2)
+    seed_zoom = int(random.uniform(0, 15))
+#     print(seed)
+#     np.random.seed(seed)
+
+    x = aug_layers(x, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom)
+    y = aug_layers(y, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom)
+    return x, y
+
+@map_decorator
+def augment_heat_map(y):
+    # random module much faster than numpy
+    seed_rot = int(random.uniform(0, 360))
+    seed_shift0 = int(random.uniform(-30, 30))
+    seed_shift1 = int(random.uniform(-30, 30))
+    seed_shear = random.uniform(-0.2, 0.2)
+    seed_zoom = int(random.uniform(0, 15))
+
+    y = aug_layers(y, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom)
+    return y
+
+def create_dataset(x, y, BATCH_SIZE):
+    dataset = tf.data.Dataset.from_tensor_slices((x, y))
+    dataset = dataset.map(augment, num_parallel_calls=tf.data.AUTOTUNE)#tf.data.AUTOTUNE)
+    dataset = dataset.batch(BATCH_SIZE)
+    dataset = dataset.shuffle(32*BATCH_SIZE)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    return dataset
 
 
 # #####################################

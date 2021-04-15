@@ -133,19 +133,8 @@ def main(args):
     print("=====================================================================")
 
 
-    BATCH_SIZE = batch_size
-    AUTOTUNE = tf.data.experimental.AUTOTUNE
-    
-    dataset_training = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-    dataset_training = dataset_training.map(augment)
-    dataset_training = dataset_training.shuffle(8*BATCH_SIZE)
-    dataset_training = dataset_training.batch(BATCH_SIZE)
-    dataset_training = dataset_training.prefetch(AUTOTUNE)
-    
-    dataset_validation = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-    dataset_validation = dataset_validation.map(augment)
-    dataset_validation = dataset_validation.batch(BATCH_SIZE)
-    dataset_validation = dataset_validation.prefetch(AUTOTUNE)
+    dataset_training = create_dataset(x_train, y_train, batch_size)
+    dataset_validation = create_dataset(x_val, y_val, batch_size)
 
 
     model = unet_2D(width, height, neighborhood, NumberFilters, dropout, lr)
@@ -164,14 +153,6 @@ def main(args):
         validation_data=dataset_validation,
         verbose=2,
         callbacks=callbacks_list,
-        # x_train,
-        # y_train,
-        # batch_size=batch_size,
-        # validation_data=(x_val, y_val),
-        # epochs=number_epochs,
-        # shuffle=True,
-        # verbose=2,
-        # callbacks=callbacks_list,
     )
 
 
