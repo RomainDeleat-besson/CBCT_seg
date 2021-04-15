@@ -175,7 +175,7 @@ for cv_fold in $(eval echo {1..$cv_folds})
 do
     echo $cv_fold
     python3 $dir_src/src/py/training_Seg.py \
-            --dir_train $dir_train \
+            --dir_train $dir_train_preproc \
             --val_folds $cv_fold \
             --save_model $dir_model \
             --log_dir $dir_log \
