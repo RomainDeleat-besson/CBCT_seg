@@ -69,12 +69,13 @@ def main(args):
                 img_obj["GT"] = GT_fn
                 img_fn_array.append(img_obj)
 
-    auc = f1 = acc = sensitivity = precision = []
-
+    total_values = pd.DataFrame(columns=[metrics_names[:-1]])
+    
     for img_obj in img_fn_array:
         pred = img_obj["img"]
         GT = img_obj["GT"]
 
+        auc = f1 = acc = sensitivity = precision = []
         pred, _ = ReadFile(pred)
         GT, _ = ReadFile(GT, verbose=0)
 
@@ -104,18 +105,21 @@ def main(args):
                             # print('error slice:', slice, 'row:', row)
                             pass
 
-
-    line = pd.DataFrame([[sum(val)/len(val) for val in [auc,f1,acc,sensitivity,precision,[cv_fold]]]], columns=model_params)
+        total_values.loc[len(total_values)] = [sum(val)/len(val) for val in [auc,f1,acc,sensitivity,precision]]
+        
+    means = total_values.mean()
+    stds = total_values.std()
+    values = [(f"{mean:.4f}"+' \u00B1 '+f"{std:.4f}") for (mean,std) in zip(means,stds)]
+    values.append(cv_fold)
+    line = pd.DataFrame([values], columns=model_params)
     Index_line = pd.MultiIndex.from_arrays([[idx_nbr+1.5],[model_name]], names=('number', 'name'))
     line.set_index(Index_line, inplace=True)
     Excel_Metrics = Excel_Metrics.append(line, ignore_index=False)
     Excel_Metrics = Excel_Metrics.sort_index()
     Excel_Metrics = Excel_Metrics.set_index(Excel_Metrics.index.droplevel('number').rename('Params'))
 
-    # print(Excel_Metrics)
-
     writer = pd.ExcelWriter(out, engine='xlsxwriter')
-    Excel_Metrics.to_excel(writer, sheet_name=sheet, float_format="%.4f", header=False)
+    Excel_Metrics.to_excel(writer, sheet_name=sheet, header=False)
     workbook = writer.book
     worksheet = writer.sheets[sheet]
 
@@ -155,9 +159,9 @@ if __name__ ==  '__main__':
     training_parameters = parser.add_argument_group('Training parameters')
     training_parameters.add_argument('--model_name', type=str, help='name of the model', default='CBCT_seg_model')
     training_parameters.add_argument('--epochs', type=int, help='name of the model', default=20)
-    training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=32)
-    training_parameters.add_argument('--learning_rate', type=float, help='', default=0.0001)
-    training_parameters.add_argument('--number_filters', type=int, help='', default=64)
+    training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=16)
+    training_parameters.add_argument('--learning_rate', type=float, help='', default=0.00001)
+    training_parameters.add_argument('--number_filters', type=int, help='', default=16)
     training_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (1|3|5|7)', default=1)
     training_parameters.add_argument('--cv_fold', type=int, help='number of the cross-validation fold', default=1)
 
