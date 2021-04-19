@@ -30,35 +30,6 @@ def remove_empty_slices(img, label):
     
     return img, label
 
-def map_decorator(func):
-    def wrapper(*args):
-        return tf.py_function(
-            func=func,
-            inp=[*args],
-            Tout=[a.dtype for a in args])
-    return wrapper
-
-def aug_layers(x, seed):
-    np.random.seed(seed)
-    
-    x = tf.image.rot90(x, seed%4) # Rotate 0, 90, 180, 270 degrees
-    x = tf.keras.preprocessing.image.random_shift(x, 0.05, 0.05, fill_mode='constant')
-    x = tf.keras.preprocessing.image.random_rotation(x, 25, row_axis=0, col_axis=1, channel_axis=2, fill_mode='constant')
-    # x = tf.keras.preprocessing.image.random_shear(x, 10, row_axis=0, col_axis=1, channel_axis=2, fill_mode='constant')
-    # x = tf.keras.preprocessing.image.random_zoom(x, (0.95, 0.95), fill_mode='constant')
-    return x
-
-@map_decorator
-def augment(x, y):
-    seed = random.randint(0,999999)
-    # print(seed)
-    
-    x = aug_layers(x, seed)
-    y = aug_layers(y, seed)
-
-    return x, y
-
-
 
 def main(args):
 
