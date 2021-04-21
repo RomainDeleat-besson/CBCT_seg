@@ -17,8 +17,6 @@ def main(args):
     if not os.path.exists(os.path.dirname(out)):
         os.makedirs(os.path.dirname(out))
 
-    sheet = args.sheet_name
-
     model_name = args.model_name
     number_epochs = args.epochs
     neighborhood = args.neighborhood
@@ -187,7 +185,6 @@ if __name__ ==  '__main__':
 
     output_params = parser.add_argument_group('Output parameters')
     output_params.add_argument('--out', type=str, help='Output filename', required=True)
-    output_params.add_argument('--sheet_name', type=str, help='Name of the excel sheet to write on', default='Sheet1')
 
     training_parameters = parser.add_argument_group('Training parameters')
     training_parameters.add_argument('--model_name', type=str, help='name of the model', default='CBCT_seg_model')

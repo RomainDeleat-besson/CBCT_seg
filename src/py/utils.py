@@ -305,7 +305,6 @@ def create_dataset(x, y, BATCH_SIZE):
 def Reconstruction(filename, dir, original_img, outdir):
     """Reconstruction of a 3D scan from the 2D slices"""
     size = original_img.shape
-    print(size)
     img = np.zeros(size)
     normpath = os.path.normpath('/'.join([dir,filename+'*']))
     for slice_path in glob.iglob(normpath):
