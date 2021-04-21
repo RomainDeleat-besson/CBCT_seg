@@ -254,7 +254,7 @@ def map_decorator(func):
             Tout=[a.dtype for a in args])
     return wrapper
 
-def aug_layers (x, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom):
+def aug_layers (x, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom, is_label):
     x = x.numpy()
     x = _rotate(x, seed_rot)           # Angle in degrees
     x = _shift(x, seed_shift0, axis=0) # Shift in pixels
@@ -262,7 +262,7 @@ def aug_layers (x, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom):
     x = _shear(x, seed_shear)          # Recommended range: [-0.2, 0.2]
     x = _centerZoom(x, seed_zoom+1)    # Zoom in pixels (+1 to avoid empty array if k=0)
 
-    if label:
+    if is_label:
         x[x<0.5] = 0
         x[x>=0.5] = 1
     else:
@@ -281,8 +281,8 @@ def augment(x, y):
 #     print(seed)
 #     np.random.seed(seed)
 
-    x = aug_layers(x, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom)
-    y = aug_layers(y, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom)
+    x = aug_layers(x, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom, is_label=False)
+    y = aug_layers(y, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom, is_label=True)
     return x, y
 
 @map_decorator
