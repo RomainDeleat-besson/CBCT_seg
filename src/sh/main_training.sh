@@ -35,6 +35,7 @@ echo "--neighborhood            Size of the neighborhood slices"
 echo "--NumberFilters           Number of filters"
 echo "--dropout                 Dropout"
 echo "--num_epoch               Number of the epoch of the model to select for the prediction"
+echo "--tool_name               Name of the tool used"
 echo "--out_metrics_val         File to save the evaluation metrics of the models on the validation set"
 echo "--out_metrics_testing     File to save the evaluation metrics of the models on the testing set"
 echo "-h|--help                 Print this Help."
@@ -99,6 +100,8 @@ while [ "$1" != "" ]; do
             dropout=$1;;
         --num_epoch )  shift
             num_epoch=$1;;
+        --tool_name )  shift
+            tool_name=$1;;
         --out_metrics_val )  shift
             out_metrics_val=$1;;
         --out_metrics_testing )  shift
@@ -123,17 +126,19 @@ dir_test="$dir_cv/Testing"
 dir_train="$dir_cv/Training"
 dir_test_preproc="${dir_test_preproc:-$dir_cv/Testing_PreProcessed}"
 dir_train_preproc="${dir_train_preproc:-$dir_cv/Training_PreProcessed}"
-dir_model="${dir_model:-$dir_project/models/$model_name}"
-dir_log="${dir_log:-$dir_model/log_dir}"
 dir_test_predict="${dir_test_predict:-$dir_cv/Testing_Predicted}"
 dir_train_predict="${dir_train_predict:-$dir_cv/Training_Predicted}"
 dir_test_postproc="${dir_test_postproc:-$dir_cv/Testing_PostProcessed}"
 dir_train_postproc="${dir_train_postproc:-$dir_cv/Training_PostProcessed}"
+
+model_name="${model_name:-CBCT_seg_model}"
+dir_model="${dir_model:-$dir_project/models/$model_name}"
+dir_log="${dir_log:-$dir_model/log_dir}"
+
 cv_folds="${cv_folds:-10}"
 testing_percentage="${testing_percentage:-20}"
 min_percentage="${min_percentage:-45}"
 max_percentage="${max_percentage:-90}"
-model_name="${model_name:-CBCT_seg_model}"
 epochs="${epochs:-50}"
 save_frequence="${save_frequence:-5}"
 width="${width:-512}"
@@ -144,6 +149,7 @@ neighborhood="${neighborhood:-3}"
 NumberFilters="${NumberFilters:-64}"
 dropout="${dropout:-0.1}"
 num_epoch="${num_epoch:-1}"
+tool_name="${tool_name:-MandSeg}"
 
 out_metrics_val="${out_metrics_val:-$dir_data/out/metrics_validation.xlsx}"
 out_metrics_testing="${out_metrics_testing:-$dir_data/out/metrics_testing.xlsx}"
@@ -179,7 +185,7 @@ do
             --val_folds $cv_fold \
             --save_model $dir_model \
             --log_dir $dir_log \
-            --model_name $model_name/$cv_fold \
+            --model_name $model_name"_"$cv_fold \
             --epochs $epochs\
             --save_frequence $save_frequence \
             --width $width \
@@ -191,6 +197,7 @@ do
             --dropout $dropout
 done
 
+cv_folds=1
 folds=$(eval echo $dir_train_preproc/{1..$cv_folds})
 for dir in $folds
 do
@@ -198,16 +205,17 @@ do
     dir_postproc=$(echo $dir | sed -e "s|${dir_train_preproc}|${dir_train_postproc}|g")
     dir_gt=$(echo $dir | sed -e "s|${dir_train_preproc}|${dir_train}|g")
     python3 $dir_src/src/py/predict_Seg.py \
-            --dir_predict $dir \
-            --load_model $dir_model/$model_name/$cv_fold/$model_name"_"$num_epoch.hdf5 \
+            --dir_predict $dir/Scans \
+            --load_model $dir_model/$model_name"_"$(basename ${dir})"_"$num_epoch.hdf5 \
             --width $width \
             --height $height \
             --neighborhood $neighborhood \
-            --out $dir_predict
-
+            --out_dir $dir_predict
+    
     python3 $dir_src/src/py/PostProcess.py \
             --dir $dir_predict \
-            --original_dir $dir_gt/Segs \
+            --original_dir $dir_gt/Scans \
+            --tool $tool_name \
             --out $dir_postproc
 
     python3 $dir_src/src/py/metrics.py \
@@ -220,7 +228,7 @@ do
             --batch_size $batch_size \
             --neighborhood $neighborhood \
             --number_filters $NumberFilters \
-            --cv_fold $(basename${dir})
+            --cv_fold $(basename ${dir})
 
 done
 
@@ -230,16 +238,17 @@ do
     dir_predict=$(echo $dir | sed -e "s|${dir_test_preproc}|${dir_test_predict}|g")
     dir_postproc=$(echo $dir | sed -e "s|${dir_test_preproc}|${dir_test_postproc}|g")
     python3 $dir_src/src/py/predict_Seg.py \
-            --dir_predict $dir \
-            --load_model $dir_model/$model_name/$cv_fold/$model_name"_"$num_epoch.hdf5 \
+            --dir_predict $dir/Scans \
+            --load_model $dir_model/$model_name"_"$(basename ${dir})"_"$num_epoch.hdf5 \
             --width $width \
             --height $height \
             --neighborhood $neighborhood \
-            --out $dir_predict
+            --out_dir $dir_predict
     
     python3 $dir_src/src/py/PostProcess.py \
             --dir $dir_predict \
-            --original_dir $dir_test/Segs \
+            --original_dir $dir_test/Scans \
+            --tool $tool_name \
             --out $dir_postproc
 
     python3 $dir_src/src/py/metrics.py \
