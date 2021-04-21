@@ -105,6 +105,10 @@ def main(args):
     print()
     print("=====================================================================")
 
+
+    dataset_training   = create_dataset(x_train, y_train, batch_size)
+    dataset_validation = create_dataset(x_val, y_val, batch_size)
+
     for images, labels in dataset_training.take(1):
         numpy_images = images.numpy()
         numpy_labels = labels.numpy()
@@ -116,10 +120,6 @@ def main(args):
     print("Labels shape: ", np.shape(numpy_labels), "min:", np.amin(numpy_labels), "max:", np.amax(numpy_labels), "unique:", len(np.unique(numpy_labels)))
     print()
     print("=====================================================================")
-
-
-    dataset_training   = create_dataset(x_train, y_train, batch_size)
-    dataset_validation = create_dataset(x_val, y_val, batch_size)
 
 
     model = unet_2D(width, height, neighborhood, NumberFilters, dropout, lr)
