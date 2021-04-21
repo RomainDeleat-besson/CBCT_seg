@@ -18,6 +18,7 @@ from scipy import ndimage
 from skimage import exposure, io
 from tensorflow.keras.preprocessing.image import save_img
 
+
 # #####################################
 # Reading files
 # #####################################
@@ -260,6 +261,13 @@ def aug_layers (x, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom):
     x = _shift(x, seed_shift1, axis=1) # Shift in pixels
     x = _shear(x, seed_shear)          # Recommended range: [-0.2, 0.2]
     x = _centerZoom(x, seed_zoom+1)    # Zoom in pixels (+1 to avoid empty array if k=0)
+
+    if label:
+        x[x<0.5] = 0
+        x[x>=0.5] = 1
+    else:
+        x = np.float32(np.uint8(255*x))/255
+
     return x
     
 @map_decorator
@@ -291,10 +299,10 @@ def augment_heat_map(y):
 
 def create_dataset(x, y, BATCH_SIZE):
     dataset = tf.data.Dataset.from_tensor_slices((x, y))
-    dataset = dataset.map(augment, num_parallel_calls=tf.data.AUTOTUNE)#tf.data.AUTOTUNE)
+    dataset = dataset.map(augment, num_parallel_calls=tf.data.experimental.AUTOTUNE)#tf.data.AUTOTUNE)
     dataset = dataset.batch(BATCH_SIZE)
     dataset = dataset.shuffle(32*BATCH_SIZE)
-    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
 
 

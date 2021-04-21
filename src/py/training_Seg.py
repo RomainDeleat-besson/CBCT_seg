@@ -8,6 +8,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 
+tf.config.run_functions_eagerly(True)
+
 from models import *
 from utils import *
 
@@ -80,17 +82,17 @@ def main(args):
 
     print("Pre-processing...")
     # Read and process the input files
-    x_train    = np.array([Array_2_5D(path, input_paths, width, height, neighborhood,label=False) for path in input_paths])
-    y_train    = np.array([Array_2_5D(path, label_paths, width, height, neighborhood,label=True) for path in label_paths])
-    x_val      = np.array([Array_2_5D(path, ValInput_paths, width, height, neighborhood,label=False) for path in ValInput_paths])
-    y_val      = np.array([Array_2_5D(path, ValLabel_paths, width, height, neighborhood,label=True) for path in ValLabel_paths])
+    x_train = np.array([Array_2_5D(path, input_paths, width, height, neighborhood,label=False) for path in input_paths])
+    y_train = np.array([Array_2_5D(path, label_paths, width, height, neighborhood,label=True) for path in label_paths])
+    x_val   = np.array([Array_2_5D(path, ValInput_paths, width, height, neighborhood,label=False) for path in ValInput_paths])
+    y_val   = np.array([Array_2_5D(path, ValLabel_paths, width, height, neighborhood,label=True) for path in ValLabel_paths])
 
     x_train, y_train = remove_empty_slices(x_train, y_train)
 
     x_train = np.reshape(x_train, x_train.shape+(1,))
     y_train = np.reshape(y_train, y_train.shape+(1,))
-    x_val = np.reshape(x_val, x_val.shape+(1,))
-    y_val = np.reshape(y_val, y_val.shape+(1,))
+    x_val   = np.reshape(x_val, x_val.shape+(1,))
+    y_val   = np.reshape(y_val, y_val.shape+(1,))
 
 
     print("Training...")
@@ -103,8 +105,20 @@ def main(args):
     print()
     print("=====================================================================")
 
+    for images, labels in dataset_training.take(1):
+        numpy_images = images.numpy()
+        numpy_labels = labels.numpy()
+        
+    print("Dataset training...")
+    print("=====================================================================")
+    print()
+    print("Inputs shape: ", np.shape(numpy_images), "min:", np.amin(numpy_images), "max:", np.amax(numpy_images), "unique:", len(np.unique(numpy_images)))
+    print("Labels shape: ", np.shape(numpy_labels), "min:", np.amin(numpy_labels), "max:", np.amax(numpy_labels), "unique:", len(np.unique(numpy_labels)))
+    print()
+    print("=====================================================================")
 
-    dataset_training = create_dataset(x_train, y_train, batch_size)
+
+    dataset_training   = create_dataset(x_train, y_train, batch_size)
     dataset_validation = create_dataset(x_val, y_val, batch_size)
 
 
@@ -113,14 +127,14 @@ def main(args):
     # model = unet_2D_larger(width, height, neighborhood, 64, dropout, lr)
 
     model_checkpoint = ModelCheckpoint(savedModel, monitor='loss',verbose=1, period=save_frequence)
-    log_dir = logPath+datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S")
+    log_dir = os.path.join(logPath,datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S"))
     tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
     callbacks_list = [model_checkpoint, tensorboard_callback]
 
     model.fit(
         dataset_training,
         epochs=number_epochs,
-        batch_size=None,
+        # batch_size=None,
         validation_data=dataset_validation,
         verbose=2,
         callbacks=callbacks_list,
@@ -144,7 +158,7 @@ if __name__ ==  '__main__':
     training_parameters.add_argument('--height', type=int, default=512)
     training_parameters.add_argument('--batch_size', type=int, help='batch size value', default=32)
     training_parameters.add_argument('--learning_rate', type=float, help='learning rate', default=0.0001)
-    training_parameters.add_argument('--number_filters', type=int, help='number of filters', default=64)
+    training_parameters.add_argument('--number_filters', type=int, help='number of filters', default=32)
     training_parameters.add_argument('--dropout', type=float, help='dropout', default=0.1)
     training_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (1|3|5|7)', default=1)
        
