@@ -10,9 +10,16 @@ from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 
 tf.config.run_functions_eagerly(True)
 
+from sklearn.utils import shuffle
 from models import *
 from utils import *
 
+
+def scheduler(epoch, lr):
+  if epoch < 10:
+    return lr
+  else:
+    return lr * tf.math.exp(-0.1)
 
 def remove_empty_slices(img, label):
 
@@ -31,6 +38,7 @@ def remove_empty_slices(img, label):
     print(img.shape)
     
     return img, label
+
 
 
 def main(args):
@@ -89,6 +97,9 @@ def main(args):
 
     x_train, y_train = remove_empty_slices(x_train, y_train)
 
+    x_train, y_train = shuffle(x_train, y_train)
+    x_val, y_val = shuffle(x_val, y_val)
+
     x_train = np.reshape(x_train, x_train.shape+(1,))
     y_train = np.reshape(y_train, y_train.shape+(1,))
     x_val   = np.reshape(x_val, x_val.shape+(1,))
@@ -123,13 +134,15 @@ def main(args):
 
 
     model = unet_2D(width, height, neighborhood, NumberFilters, dropout, lr)
-    # model = unet_2D_deeper(width, height, neighborhood, 32, dropout, lr)
-    # model = unet_2D_larger(width, height, neighborhood, 64, dropout, lr)
+    # model = unet_2D_deeper(width, height, neighborhood, NumberFilters, dropout, lr)
+    # model = unet_2D_larger(width, height, neighborhood, NumberFilters, dropout, lr)
 
     model_checkpoint = ModelCheckpoint(savedModel, monitor='loss',verbose=1, period=save_frequence)
     log_dir = os.path.join(logPath,datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S"))
     tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
-    callbacks_list = [model_checkpoint, tensorboard_callback]
+    LR_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
+
+    callbacks_list = [model_checkpoint, tensorboard_callback, LR_callback]
 
     model.fit(
         dataset_training,
