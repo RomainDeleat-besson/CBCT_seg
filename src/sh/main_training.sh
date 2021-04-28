@@ -205,12 +205,12 @@ do
     dir_postproc=$(echo $dir | sed -e "s|${dir_train_preproc}|${dir_train_postproc}|g")
     dir_gt=$(echo $dir | sed -e "s|${dir_train_preproc}|${dir_train}|g")
     python3 $dir_src/src/py/predict_Seg.py \
-            --dir_predict $dir/Scans \
+            --dir_predict $(dirname ${dir})/Scans \
             --load_model $dir_model/$model_name"_"$(basename ${dir})"_"$num_epoch.hdf5 \
             --width $width \
             --height $height \
             --neighborhood $neighborhood \
-            --out_dir $dir_predict
+            --out $dir_predict
     
     python3 $dir_src/src/py/PostProcess.py \
             --dir $dir_predict \
@@ -238,12 +238,12 @@ do
     dir_predict=$(echo $dir | sed -e "s|${dir_test_preproc}|${dir_test_predict}|g")
     dir_postproc=$(echo $dir | sed -e "s|${dir_test_preproc}|${dir_test_postproc}|g")
     python3 $dir_src/src/py/predict_Seg.py \
-            --dir_predict $dir/Scans \
+            --dir_predict $(dirname ${dir})/Scans \
             --load_model $dir_model/$model_name"_"$(basename ${dir})"_"$num_epoch.hdf5 \
             --width $width \
             --height $height \
             --neighborhood $neighborhood \
-            --out_dir $dir_predict
+            --out $dir_predict
     
     python3 $dir_src/src/py/PostProcess.py \
             --dir $dir_predict \
