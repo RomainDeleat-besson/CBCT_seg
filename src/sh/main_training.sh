@@ -205,7 +205,7 @@ do
     dir_postproc=$(echo $dir | sed -e "s|${dir_train_preproc}|${dir_train_postproc}|g")
     dir_gt=$(echo $dir | sed -e "s|${dir_train_preproc}|${dir_train}|g")
     python3 $dir_src/src/py/predict_Seg.py \
-            --dir_predict $(dirname ${dir})/Scans \
+            --dir_predict $dir/Scans \
             --load_model $dir_model/$model_name"_"$(basename ${dir})"_"$num_epoch.hdf5 \
             --width $width \
             --height $height \
