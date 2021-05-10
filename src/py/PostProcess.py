@@ -35,12 +35,44 @@ def main(args):
 		if '.gz' in original_img_path: ext=ext+'.gz'
 
 		img = Reconstruction(filename,dir,original_img,out)
-		thresh = threshold_otsu(img)
-		img = image > thresh
-		# header = GetHeader(original_img, original_header, ext)
+		img = img.astype(np.ushort)
 
+		ImageType = itk.Image[itk.US, 3]
+		itk_img = itk.PyBuffer[ImageType].GetImageFromArray(img)
+
+		OtsuThresholdImageFilter = itk.OtsuThresholdImageFilter[ImageType, ImageType].New()
+		OtsuThresholdImageFilter.SetInput(itk_img)
+		OtsuThresholdImageFilter.SetInsideValue(0)
+		OtsuThresholdImageFilter.SetOutsideValue(1)
+		OtsuThresholdImageFilter.Update()
+		binary_img = OtsuThresholdImageFilter.GetOutput()
+
+		label = itk.ConnectedComponentImageFilter[ImageType, ImageType].New()
+		label.SetInput(binary_img)
+		label.Update()
+
+		labelStatisticsImageFilter = itk.LabelStatisticsImageFilter[ImageType, ImageType].New()
+		labelStatisticsImageFilter.SetLabelInput(label.GetOutput())
+		labelStatisticsImageFilter.SetInput(binary_img)
+		labelStatisticsImageFilter.Update()
+		labelList = labelStatisticsImageFilter.GetValidLabelValues()
+		NbreOfLabel = len(labelList)
+
+		if tool_name == 'MandSeg':
+			labelSize=[]
+			[labelSize.append(labelStatisticsImageFilter.GetCount(i)) for i in range(1,len(labelList))]
+			Max = max(labelSize)
+
+			RelabelComponentImageFilter = itk.RelabelComponentImageFilter[ImageType, ImageType].New()
+			RelabelComponentImageFilter.SetInput(label)
+			RelabelComponentImageFilter.SetMinimumObjectSize(Max)
+			RelabelComponentImageFilter.Update()
+			relabeled_itk_img = RelabelComponentImageFilter.GetOutput()
+
+		# outfile = os.path.normpath('/'.join([out,filename+'_Original_'+tool_name+ext]))
+		# SaveFile(outfile, itk.GetArrayFromImage(itk_img), original_header)
 		outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
-		SaveFile(outfile, img, original_header)
+		SaveFile(outfile, itk.GetArrayFromImage(binary_img), original_header)
 		
 
 if __name__ ==  '__main__':
