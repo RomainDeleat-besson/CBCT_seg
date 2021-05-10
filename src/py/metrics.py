@@ -74,7 +74,17 @@ def main(args):
     if args.pred_dir:
         normpath_img = os.path.normpath("/".join([args.pred_dir, '*', '']))
         normpath_GT = os.path.normpath("/".join([args.groundtruth_dir, '*', '']))
-        for (img_fn, GT_fn) in zip(sorted(glob.iglob(normpath_img, recursive=True)), sorted(glob.iglob(normpath_GT, recursive=True))):
+
+        img_list = []
+        for img_fn in glob.iglob(normpath_img, recursive=True):
+            if tool_name == 'RCSeg':
+                img_split = img_fn.split("_")
+                if img_split[0] == img_split[-2] or (img_split[-2] not in ['upper', 'lower']):
+                    img_list.append(img_fn)
+            else: 
+                img_list.append(img_fn)
+
+        for (img_fn, GT_fn) in zip(sorted(img_list), sorted(glob.iglob(normpath_GT, recursive=True))):
             if os.path.isfile(img_fn) and True in [ext in img_fn for ext in [".nrrd", ".nrrd.gz", ".nii", ".nii.gz", ".gipl", ".gipl.gz"]]:
                 img_obj = {}
                 img_obj["img"] = img_fn
@@ -193,6 +203,7 @@ if __name__ ==  '__main__':
     output_params.add_argument('--out', type=str, help='Output filename', required=True)
 
     training_parameters = parser.add_argument_group('Training parameters')
+    training_parameters.add_argument('--tool', type=str, help='Name of the tool used', default='MandSeg')
     training_parameters.add_argument('--model_name', type=str, help='name of the model', default='CBCT_seg_model')
     training_parameters.add_argument('--epochs', type=int, help='name of the model', default=20)
     training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=16)
