@@ -299,10 +299,10 @@ def augment_heat_map(y):
 
 def create_dataset(x, y, BATCH_SIZE):
     dataset = tf.data.Dataset.from_tensor_slices((x, y))
-    dataset = dataset.map(augment, num_parallel_calls=tf.data.experimental.AUTOTUNE)#tf.data.AUTOTUNE)
+    dataset = dataset.map(augment, num_parallel_calls=tf.data.AUTOTUNE)#tf.data.AUTOTUNE)
     dataset = dataset.batch(BATCH_SIZE)
-    dataset = dataset.shuffle(32*BATCH_SIZE)
-    dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
+    dataset = dataset.shuffle(4*BATCH_SIZE)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
 
 

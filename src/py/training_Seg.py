@@ -15,11 +15,6 @@ from models import *
 from utils import *
 
 
-def scheduler(epoch, lr):
-  if epoch < 10:
-    return lr
-  else:
-    return lr * tf.math.exp(-0.1)
 
 def remove_empty_slices(img, label):
 
@@ -97,8 +92,8 @@ def main(args):
 
     x_train, y_train = remove_empty_slices(x_train, y_train)
 
-    x_train, y_train = shuffle(x_train, y_train)
-    x_val, y_val = shuffle(x_val, y_val)
+    # x_train, y_train = shuffle(x_train, y_train)
+    # x_val, y_val = shuffle(x_val, y_val)
 
     x_train = np.reshape(x_train, x_train.shape+(1,))
     y_train = np.reshape(y_train, y_train.shape+(1,))
@@ -134,15 +129,12 @@ def main(args):
 
 
     model = unet_2D(width, height, neighborhood, NumberFilters, dropout, lr)
-    # model = unet_2D_deeper(width, height, neighborhood, NumberFilters, dropout, lr)
-    # model = unet_2D_larger(width, height, neighborhood, NumberFilters, dropout, lr)
 
     model_checkpoint = ModelCheckpoint(savedModel, monitor='loss',verbose=1, period=save_frequence)
-    log_dir = os.path.join(logPath,datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S"))
+    log_dir = os.path.join(logPath,args.model_name+"_"+datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S"))
     tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
-    LR_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
 
-    callbacks_list = [model_checkpoint, tensorboard_callback, LR_callback]
+    callbacks_list = [model_checkpoint, tensorboard_callback]
 
     model.fit(
         dataset_training,
