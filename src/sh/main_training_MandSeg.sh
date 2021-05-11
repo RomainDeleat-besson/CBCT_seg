@@ -135,21 +135,21 @@ model_name="${model_name:-CBCT_seg_model}"
 dir_model="${dir_model:-$dir_project/models/$model_name}"
 dir_log="${dir_log:-$dir_model/log_dir}"
 
-cv_folds="${cv_folds:-10}"
-testing_percentage="${testing_percentage:-20}"
-min_percentage="${min_percentage:-45}"
+cv_folds="${cv_folds:-8}"
+testing_percentage="${testing_percentage:-15}"
+min_percentage="${min_percentage:-30}"
 max_percentage="${max_percentage:-90}"
-epochs="${epochs:-50}"
+epochs="${epochs:-100}"
 save_frequence="${save_frequence:-5}"
-width="${width:-512}"
-height="${height:-512}"
+width="${width:-320}"
+height="${height:-320}"
 learning_rate="${learning_rate:-0.0001}"
-batch_size="${batch_size:-16}"
-neighborhood="${neighborhood:-3}"
-NumberFilters="${NumberFilters:-64}"
+batch_size="${batch_size:-20}"
+neighborhood="${neighborhood:-1}"
+NumberFilters="${NumberFilters:-16}"
 dropout="${dropout:-0.1}"
-num_epoch="${num_epoch:-1}"
-tool_name="${tool_name:-RCSeg}"
+num_epoch="${num_epoch:-100}"
+tool_name="${tool_name:-MandSeg}"
 
 out_metrics_val="${out_metrics_val:-$dir_data/out/metrics_validation.xlsx}"
 out_metrics_testing="${out_metrics_testing:-$dir_data/out/metrics_testing.xlsx}"
@@ -226,7 +226,7 @@ do
             --out $out_metrics_val \
             --tool $tool_name \
             --model_name $model_name \
-            --epochs $epochs\
+            --epochs $num_epoch\
             --learning_rate $learning_rate \
             --batch_size $batch_size \
             --neighborhood $neighborhood \
@@ -260,10 +260,11 @@ do
             --out $out_metrics_testing \
             --tool $tool_name \
             --model_name $model_name \
-            --epochs $epochs\
+            --epochs $num_epoch\
             --learning_rate $learning_rate \
             --batch_size $batch_size \
             --neighborhood $neighborhood \
             --number_filters $NumberFilters \
             --cv_fold $(basename ${dir})
+
 done

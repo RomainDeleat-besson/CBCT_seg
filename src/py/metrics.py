@@ -77,8 +77,11 @@ def main(args):
 
         img_list = []
         for img_fn in glob.iglob(normpath_img, recursive=True):
-            img_split = img_fn.split("_")
-            if img_split[0] == img_split[-2] or (img_split[-2] not in ['upper', 'lower']):
+            if tool_name == 'RCSeg':
+                img_split = img_fn.split("_")
+                if img_split[0] == img_split[-2] or (img_split[-2] not in ['upper', 'lower']):
+                    img_list.append(img_fn)
+            else: 
                 img_list.append(img_fn)
 
         for (img_fn, GT_fn) in zip(sorted(img_list), sorted(glob.iglob(normpath_GT, recursive=True))):
@@ -106,21 +109,27 @@ def main(args):
 
         pred = Normalize(pred,out_min=0,out_max=1)
         GT = Normalize(GT,out_min=0,out_max=1)
+        pred[pred<=0.5]=0
+        pred[pred>0.5]=1
+        GT[GT<=0.5]=0
+        GT[GT>0.5]=1
 
         for slice in range(len(pred)):
             slice_pred = pred[slice]
             slice_GT = GT[slice]
-            if slice_GT.max() != 0:
-                
+            if slice_GT.max() != 0 or slice_pred.max() != 0:
                 for row in range(len(slice_pred)):
                     row_pred = slice_pred[row]
                     row_GT = slice_GT[row]
-                    if row_GT.max() != 0 and row_pred.max() != 0:
+                    if row_GT.max() != 0 or row_pred.max() != 0:
+                        if row_GT.max()==0: 
+                            row_GT[0]=1
+                            row_pred[0]=1
                         auc.append(metrics.roc_auc_score(row_GT, row_pred))
                         f1.append(metrics.f1_score(row_GT, row_pred))
                         acc.append(metrics.accuracy_score(row_GT, row_pred))
                         sensitivity.append(metrics.recall_score(row_GT, row_pred))
-                        precision.append(metrics.precision_score(row_GT, row_pred))
+                        precision.append(metrics.precision_score(row_GT, row_pred, zero_division=0))
 
         metrics_line = [sum(val)/len(val) for val in [auc,f1,acc,sensitivity,precision]]
         metrics_line.append(os.path.basename(pred_path).split('.')[0])
@@ -194,6 +203,7 @@ if __name__ ==  '__main__':
     output_params.add_argument('--out', type=str, help='Output filename', required=True)
 
     training_parameters = parser.add_argument_group('Training parameters')
+    training_parameters.add_argument('--tool', type=str, help='Name of the tool used', default='MandSeg')
     training_parameters.add_argument('--model_name', type=str, help='name of the model', default='CBCT_seg_model')
     training_parameters.add_argument('--epochs', type=int, help='name of the model', default=20)
     training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=16)

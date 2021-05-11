@@ -294,7 +294,7 @@ def augment_heat_map(y):
     seed_shear = random.uniform(-0.2, 0.2)
     seed_zoom = int(random.uniform(0, 15))
 
-    y = aug_layers(y, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom)
+    y = aug_layers(y, seed_rot, seed_shift0, seed_shift1, seed_shear, seed_zoom, is_label=True)
     return y
 
 def create_dataset(x, y, BATCH_SIZE):
