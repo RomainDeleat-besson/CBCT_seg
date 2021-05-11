@@ -52,7 +52,7 @@ def main(args):
 
 		RelabelComponentImageFilter = itk.RelabelComponentImageFilter[ImageType, ImageType].New()
 		RelabelComponentImageFilter.SetInput(ConnectedComponentImageFilter)
-		RelabelComponentImageFilter.SetMinimumObjectSize(800)
+		RelabelComponentImageFilter.SetMinimumObjectSize(1000)
 		RelabelComponentImageFilter.Update()
 
 		print("Max pixel object:", RelabelComponentImageFilter.GetSizeOfObjectsInPixels()[0])

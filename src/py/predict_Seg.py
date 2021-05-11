@@ -59,9 +59,9 @@ def main(args):
         
         if np.amax(prediction)>0:
             prediction = (prediction-np.amin(prediction))/(np.amax(prediction)-np.amin(prediction))
-        
-        # prediction[prediction<=0.5]=0
-        # prediction[prediction>0.5]=1
+            prediction[prediction<0.05]=0
+            prediction[prediction>=0.05] = 255
+
         outputFilename = os.path.join(out, os.path.basename(input_paths[i]))
         prediction = np.reshape(prediction, (width, height, 1))
         Save_png(outputFilename, prediction)
