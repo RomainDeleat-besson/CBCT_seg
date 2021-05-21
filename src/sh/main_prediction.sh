@@ -25,6 +25,12 @@ while [ "$1" != "" ]; do
             dir_input=$1;;
         --dir_output )  shift
             dir_output=$1;;
+        --path_model )  shift
+            path_model=$1;;
+        --min_percentage )  shift
+            min_percentage=$1;;
+        --max_percentage )  shift
+            max_percentage=$1;;
         --width )  shift
             width=$1;;
         --height )  shift
@@ -46,6 +52,8 @@ dir_src="${dir_src:-./CBCT_seg/src}"
 dir_input="${dir_cv:-./Scans}"
 dir_output="${dir_output:-$dir_input}"
 
+min_percentage="${min_percentage:-30}"
+max_percentage="${max_percentage:-90}"
 width="${width:-512}"
 height="${height:-512}"
 tool_name="${tool_name:-MandSeg}"
@@ -53,6 +61,10 @@ tool_name="${tool_name:-MandSeg}"
 
 python3 $dir_src/py/PreProcess.py \
     --dir $dir_input \
+    --desired_width $width \
+    --desired_height $height \
+    --min_percentage $min_percentage \
+    --max_percentage $max_percentage \
     --out "$dir_input"_PreProcessed
 
 python3 $dir_src/py/predict_Seg.py \
@@ -63,7 +75,7 @@ python3 $dir_src/py/predict_Seg.py \
     --out "$dir_input"_Predicted
 
 python3 $dir_src/py/PostProcess.py \
-    --dir $dir_predict \
+    --dir "$dir_input"_Predicted \
     --original_dir $dir_input \
     --tool $tool_name \
     --out $dir_output

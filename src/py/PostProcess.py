@@ -174,7 +174,7 @@ def main(args):
 
 			labelStatisticsImageFilter = itk.LabelStatisticsImageFilter[ImageType, ImageType].New()
 			labelStatisticsImageFilter.SetLabelInput(ConnectedComponentImageFilter.GetOutput())
-			labelStatisticsImageFilter.SetInput(binary_img)
+			labelStatisticsImageFilter.SetInput(itk_img)
 			labelStatisticsImageFilter.Update()
 			labelList = labelStatisticsImageFilter.GetValidLabelValues()
 			NbreOfLabel = len(labelList)
@@ -190,7 +190,7 @@ def main(args):
 			relabeled_itk_img = RelabelComponentImageFilter.GetOutput()
 
 			outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
-			SaveFile(outfile, itk.GetArrayFromImage(binary_img), original_header)
+			SaveFile(outfile, itk.GetArrayFromImage(relabeled_itk_img), original_header)
 	
 
 
