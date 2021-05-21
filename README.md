@@ -8,7 +8,7 @@ Scripts for MandSeg and RootCanalSeg projects
 
 python 3.7.9 with the librairies:
 
-- Main librairies:
+**Main librairies:**
 
 > tensorflow==2.4.1 \
 > tensorflow-gpu==2.4.0 \
@@ -16,7 +16,7 @@ python 3.7.9 with the librairies:
 > numpy==1.19.5 \
 > itk==5.2.0 \
 
-- Detailed librairies
+**Detailed librairies**
 
 > requirements.txt
 
@@ -30,11 +30,11 @@ It takes several CBCT scans in input, with the extensions: .nii | nii.gz, .gipl 
 
 ## Running the code
 
-- Prediction
+**Prediction**
 
 To run the prediction algorithm, run the folowing command line:
 
-> bash src/sh/main_prediction.sh PARAMETERS
+- bash src/sh/main_prediction.sh PARAMETERS
 
 ```
 the input parameters are:
@@ -51,11 +51,11 @@ the optionnal parameters are:
 -h|--help                 Print this Help.
 ```
 
-- Training 
+**Training**
 
 To run the training algorithm, run the folowing command line (main_training_MandSeg.sh and main_training_RCSeg.sh have the same parameters but not the same values in the optionnal parameters):
 
-> bash src/sh/main_training_MandSeg.sh PARAMETERS
+- bash src/sh/main_training_MandSeg.sh PARAMETERS
 
 ```
 the input parameters are:
@@ -96,9 +96,27 @@ the optionnal parameters are:
 -h|--help                 Print this Help.
 ```
 
+**Docker**
+
+*MandSeg:*
+
+You can get and run the MandSeg docker image by running the folowing command line:
+
+- docker pull dcbia/mandseg:latest
+
+- docker run --rm -v */my/input/folder*:/app/scans mandseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scan --path_model /app/model/*ModelName* --min_percentage 30 --max_percentage 90 --width 256 --height 256 --tool_name MandSeg
+
+*RCSeg:*
+
+You can get and run the MandSeg docker image by running the folowing command line:
+
+- docker pull dcbia/rcseg:latest
+
+- docker run --rm -v */my/input/folder*:/app/scans rcseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scan --path_model /app/model/*ModelName* --min_percentage 55 --max_percentage 90 --width 512 --height 512 --tool_name RCSeg
+
 ### Creation of the folds for the cross validation
 
-python3 src/py/CV_folds.py 
+- python3 src/py/CV_folds.py 
 
 input: folder containing all the scans and segmentations
 
@@ -165,7 +183,6 @@ Output parameters:
   --out OUT             Output directory (default: None)
 ```
 
-
 - python3 src/py/labels_preprocess.py 
 
 input: 3D CBCT labels (.nii | nii.gz, .gipl | .gipl.gz, .nrrd)
@@ -200,9 +217,9 @@ Output parameters:
 
 #### Data augmentation
 
-> The data augmentation used in the training applies random rotation, shift, shear and zoom.
+The data augmentation used in the training applies random rotation, shift, shear and zoom.
 
-python3 src/py/heat_map.py 
+- python3 src/py/heat_map.py 
 
 input: Database that contains the labels
 
@@ -235,7 +252,7 @@ Output parameters:
 
 The neural network choosen is a U-Net architecture. The loss function is the *BinaryCrossentropy*. The metrics monitered during the training were the *Recall, Precision and AUC* metrics. 
 
-python3 src/py/training_Seg.py 
+- python3 src/py/training_Seg.py 
 
 input: The scans and labels for the training
 
@@ -286,7 +303,7 @@ training parameters:
 
 ### Prediction
 
-python3 src/py/predict_Seg.py 
+- python3 src/py/predict_Seg.py 
 
 input: 2D slices form CBCT scans
 
@@ -319,7 +336,7 @@ Output parameters:
 
 ### Post-Processing
 
-python3 src/py/PostProcess.py 
+- python3 src/py/PostProcess.py 
 
 input: directory with .png slices
 
@@ -350,7 +367,7 @@ Output parameters:
 
 ### Evaluation of the trained models
 
-python3 src/py/metrics.py 
+- python3 src/py/metrics.py 
 
 input: either a 3D file and its ground truth, or a directory of 3D files and their ground truths.
 
