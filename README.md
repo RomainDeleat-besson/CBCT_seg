@@ -6,7 +6,22 @@ Scripts for MandSeg and RootCanalSeg projects
 
 ## Prerequisites
 
-python 3.7.9 with the librairies: //add librairies
+python 3.7.9 with the librairies:
+
+- Main librairies:
+
+> tensorflow==2.4.1
+> tensorflow-gpu==2.4.0
+> Pillow==7.2.0
+> numpy==1.19.5
+> itk==5.2.0
+> scikit-image==0.16.2
+> scikit-learn==0.23.1
+> scipy==1.5.0
+
+- Details librairies
+
+
 
 ## What is it?
 
@@ -14,11 +29,75 @@ CBCT_seg is a tool for CBCT segmentation based on a machine learning approach.
 
 The Convolutional Neural Network (CNN) used is a 2D U-Net.
 
-It takes several CBCT scan in input, with the extensions: .nii | nii.gz, .gipl | .gipl.gz, .nrrd
+It takes several CBCT scans in input, with the extensions: .nii | nii.gz, .gipl | .gipl.gz, .nrrd
 
 ## Running the code
 
-main script 
+- Prediction
+
+To run the prediction algorithm, run the folowing command line:
+
+> bash src/sh/main_prediction.sh PARAMETERS
+
+```
+the input parameters are:
+
+--dir_src                 Folder containing the scripts.
+--dir_input               Folder containing the scans to segment.
+--dir_output              Folder to save the postprocessed images
+
+the optionnal parameters are:
+
+--width                   Width of the images
+--height                  Height of the images
+--tool_name               Tool name [MandSeg | RCSeg]
+-h|--help                 Print this Help.
+```
+
+- Training 
+
+To run the training algorithm, run the folowing command line (main_training_MandSeg.sh and main_training_RCSeg.sh have the same parameters but not the same values in the optionnal parameters):
+
+> bash src/sh/main_training_MandSeg.sh PARAMETERS
+
+```
+the input parameters are:
+
+--dir_project             Folder containing the project.
+--dir_src                 Folder containing the scripts.
+--dir_data                Folder containing all the data of the project.
+--dir_database            Folder containing the database for the training/testing.
+--dir_cv                  Folder to save the cross-validation folds.
+--dir_test_preproc        Folder to save the preprocessed testing images
+--dir_train_preproc       Folder to save the preprocessed training images
+--dir_model               Folder to save the models
+--dir_log                 Folder to save the logs of the model
+--dir_test_predict        Folder to save the predicted testing images
+--dir_train_predict       Folder to save the predicted training images
+--dir_test_postproc       Folder to save the postprocessed testing images
+--dir_train_postproc      Folder to save the postprocessed training images
+
+the optionnal parameters are:
+
+--cv_folds                Number of folds for the cross validation.
+--testing_percentage      Percentage of images to keep for testing
+--min_percentage          Min percentage to threshold images for preprocessing
+--max_percentage          Max percentage to threshold images for preprocessing
+--model_name              Name of the model
+--epochs                  Number of epochs for training the models
+--save_frequence          Frequence of saving the models
+--width                   Width of the images
+--height                  Height of the images
+--learning_rate           Learning rate
+--batch_size              Batch size
+--NumberFilters           Number of filters
+--dropout                 Dropout
+--num_epoch               Number of the epoch of the model to select for the prediction
+--tool_name               Name of the tool used
+--out_metrics_val         File to save the evaluation metrics of the models on the validation set
+--out_metrics_testing     File to save the evaluation metrics of the models on the testing set
+-h|--help                 Print this Help.
+```
 
 ### Creation of the folds for the cross validation
 

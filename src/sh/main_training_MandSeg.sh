@@ -136,15 +136,15 @@ cv_folds="${cv_folds:-8}"
 testing_percentage="${testing_percentage:-15}"
 min_percentage="${min_percentage:-30}"
 max_percentage="${max_percentage:-90}"
-epochs="${epochs:-100}"
+epochs="${epochs:-80}"
 save_frequence="${save_frequence:-5}"
 width="${width:-320}"
 height="${height:-320}"
 learning_rate="${learning_rate:-0.0001}"
-batch_size="${batch_size:-20}"
+batch_size="${batch_size:-32}"
 NumberFilters="${NumberFilters:-16}"
 dropout="${dropout:-0.1}"
-num_epoch="${num_epoch:-100}"
+num_epoch="${num_epoch:-40}"
 tool_name="${tool_name:-MandSeg}"
 
 out_metrics_val="${out_metrics_val:-$dir_data/out/metrics_validation.xlsx}"
@@ -194,7 +194,6 @@ do
             --dropout $dropout
 done
 
-cv_folds=1
 folds=$(eval echo $dir_train_preproc/{1..$cv_folds})
 for dir in $folds
 do
@@ -225,7 +224,6 @@ do
             --batch_size $batch_size \
             --number_filters $NumberFilters \
             --cv_fold $(basename ${dir})
-
 done
 
 folds=$(eval echo $dir_test_preproc/{1..$cv_folds})
@@ -257,5 +255,4 @@ do
             --batch_size $batch_size \
             --number_filters $NumberFilters \
             --cv_fold $(basename ${dir})
-
 done
