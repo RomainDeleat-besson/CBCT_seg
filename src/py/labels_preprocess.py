@@ -9,7 +9,6 @@ from utils import *
 
 
 def main(args):
-
 	desired_width = args.desired_width
 	desired_height = args.desired_height
 
@@ -43,6 +42,7 @@ def main(args):
 		
 		print("Deconstruction...")
 		Deconstruction(img, image, out, desired_width, desired_height)
+
 
 
 if __name__ ==  '__main__':

@@ -8,7 +8,6 @@ from utils import *
 
 
 def main(args):
-
     outdir = os.path.normpath("/".join([args.out]))
     train_path = outdir+'/Training'
     test_path = outdir+'/Testing'
@@ -33,15 +32,12 @@ def main(args):
     for files in [args.dir+'/**/*'+ext for ext in [".nrrd", ".nrrd.gz", ".nii", ".nii.gz", ".gipl", ".gipl.gz"]]:
         nbr_files += len(glob.glob(files, recursive=True))
     nbr_scans = nbr_files/2
-    # print(nbr_scans)
     
     for dir in glob.iglob(dirs_normpath, recursive=True):
         scan_fn_array = []
         seg_fn_array = []
 
         normpath = os.path.normpath("/".join([dir, '**', '']))
-        # print('================================================================')
-        # print(dir)
         for img_fn in sorted(glob.iglob(normpath, recursive=True)):
             if os.path.isfile(img_fn) and True in [ext in img_fn for ext in [".nrrd", ".nrrd.gz", ".nii", ".nii.gz", ".gipl", ".gipl.gz"]]:
                 img_obj = {}
@@ -53,7 +49,6 @@ def main(args):
                     img_obj["img"] = img_fn
                     img_obj["out"] = '/Scans/'+os.path.basename(dir)+'_'+os.path.basename(img_fn)
                     scan_fn_array.append(img_obj)
-        # print(len(scan_fn_array), len(seg_fn_array))
         
         if args.testing_number: test_nbr = round(args.testing_number*len(scan_fn_array)/nbr_scans)
         else: test_nbr = round(args.testing_percentage*len(scan_fn_array)/100)
@@ -93,6 +88,7 @@ if __name__ ==  '__main__':
     output_params = parser.add_argument_group('Output parameters')
     output_params.add_argument('--out', type=str, help='Output directory', required=True)
     output_params.add_argument('--cv_folds', type=int, help='Number of folds to create', default=10)
+    
     testing_params = output_params.add_mutually_exclusive_group()
     testing_params.add_argument('--testing_number', type=int, help='Number of scans to keep for testing', default=1)
     testing_params.add_argument('--testing_percentage', type=int, help='Percentage of scans to keep for testing', default=20)

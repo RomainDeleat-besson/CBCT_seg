@@ -1,19 +1,18 @@
 import argparse
 import os
+from collections import Counter
 
 import itk
 import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
-from skimage.filters import threshold_local, threshold_otsu
-
+from skimage.filters import threshold_otsu
 from sklearn.cluster import KMeans
-from collections import Counter
+
 from utils import *
 
 
 def main(args):
-
 	dir = args.dir
 	original_dir = args.original_dir
 	tool_name = args.tool
@@ -25,6 +24,7 @@ def main(args):
 	original_img_paths = [ori_fn for ori_fn in glob.iglob(os.path.normpath("/".join([original_dir, '*', ''])), recursive=True)]
 
 	for original_img_path in glob.iglob(os.path.normpath("/".join([original_dir, '*', ''])), recursive=True):
+		print("============================================")
 		
 		basename = os.path.basename(original_img_path).split('.')[0]
 		filename = '_'.join([file for file in os.listdir(dir) if file.startswith(basename)][0].split('_')[:-1])
@@ -37,20 +37,17 @@ def main(args):
 		if '.gz' in original_img_path: ext=ext+'.gz'
 
 		img = Reconstruction(filename,dir,original_img,out)
+		thresh=threshold_otsu(img)-20
+		print("Otsu's threshold: ", thresh)
+		img[img<thresh]=0
+		img[img>=thresh]=255
 		img = img.astype(np.ushort)
 
 		ImageType = itk.Image[itk.US, 3]
 		itk_img = itk.PyBuffer[ImageType].GetImageFromArray(img)
 
-		OtsuThresholdImageFilter = itk.OtsuThresholdImageFilter[ImageType, ImageType].New()
-		OtsuThresholdImageFilter.SetInput(itk_img)
-		OtsuThresholdImageFilter.SetInsideValue(0)
-		OtsuThresholdImageFilter.SetOutsideValue(1)
-		OtsuThresholdImageFilter.Update()
-		binary_img = OtsuThresholdImageFilter.GetOutput()
-
 		ConnectedComponentImageFilter = itk.ConnectedComponentImageFilter[ImageType, ImageType].New()
-		ConnectedComponentImageFilter.SetInput(binary_img)
+		ConnectedComponentImageFilter.SetInput(itk_img)
 		ConnectedComponentImageFilter.Update()
 
 		if tool_name == 'RCSeg':
@@ -71,7 +68,6 @@ def main(args):
 			labelStatisticsImageFilter.Update()
 			NumberOfLabel = len(labelStatisticsImageFilter.GetValidLabelValues())
 			
-
 			L_BoundingBoxSlices = []
 			for i in range (1, NumberOfLabel):
 				xmin = labelStatisticsImageFilter.GetBoundingBox(i)[0]
@@ -92,18 +88,16 @@ def main(args):
 				indice_upper=1
 				indice_lower=0
 
-
 			LabelType = itk.LabelMap[itk.StatisticsLabelObject[itk.UL,3]]
 			LabelImageToLabelMapFilter = itk.LabelImageToLabelMapFilter[ImageType, LabelType].New()
 			LabelImageToLabelMapFilter.SetInput(RelabelComponentImageFilter)
 			LabelImageToLabelMapFilter.Update()
 
-			print("c1   ", NumberCluster[0])
-			print("c2   ", NumberCluster[1])
-			print("c1/c2", NumberCluster[0]/NumberCluster[1])
+			distance_clusters = abs(mean_cluster_0 - mean_cluster_1)
+			print("dist mean cluster:", distance_clusters)
 
 			# Condition to know if there are 2 jaws in the scan
-			if NumberOfLabel>20 and (NumberCluster[0]/NumberCluster[1] > 0.6 and NumberCluster[0]/NumberCluster[1] < 1.4):
+			if distance_clusters > 40:
 				RelabelComponentImageFilter_upper = itk.image_duplicator(RelabelComponentImageFilter)
 				RelabelComponentImageFilter_lower = itk.image_duplicator(RelabelComponentImageFilter)
 
@@ -118,36 +112,63 @@ def main(args):
 				LabelImageToLabelMapFilter_upper = LabelImageToLabelMapFilter_upper.GetOutput()
 				LabelImageToLabelMapFilter_lower = LabelImageToLabelMapFilter_lower.GetOutput()
 
-
+				LabelUpper, LabelLower = [], []
 				for i in range (1, NumberOfLabel):
 					if kmeans.labels_[i-1] == indice_upper:
 						LabelImageToLabelMapFilter_lower.RemoveLabel(i)
+						LabelUpper.append(i)
 
 					if kmeans.labels_[i-1] == indice_lower:
 						LabelImageToLabelMapFilter_upper.RemoveLabel(i)
+						LabelLower.append(i)
 
+				# Upper
+				ChangeLabelLabelMapFilter_upper = itk.ChangeLabelLabelMapFilter[LabelType].New()
+				ChangeLabelLabelMapFilter_upper.SetInput(LabelImageToLabelMapFilter_upper)
+
+				for lbl in LabelUpper:
+					ChangeLabelLabelMapFilter_upper.SetChange(lbl, 1)
+				ChangeLabelLabelMapFilter_upper.Update()
 
 				LabelMapToLabelImageFilter_upper = itk.LabelMapToLabelImageFilter[LabelType, ImageType].New()
-				LabelMapToLabelImageFilter_upper.SetInput(LabelImageToLabelMapFilter_upper)
+				LabelMapToLabelImageFilter_upper.SetInput(ChangeLabelLabelMapFilter_upper)
 				LabelMapToLabelImageFilter_upper.Update()
-
-				LabelMapToLabelImageFilter_lower = itk.LabelMapToLabelImageFilter[LabelType, ImageType].New()
-				LabelMapToLabelImageFilter_lower.SetInput(LabelImageToLabelMapFilter_lower)
-				LabelMapToLabelImageFilter_lower.Update()
 
 				outfile = os.path.normpath('/'.join([out,filename+'_'+"upper_"+tool_name+ext]))
 				SaveFile(outfile, LabelMapToLabelImageFilter_upper.GetOutput(), original_header)
+				
+				# Lower
+				ChangeLabelLabelMapFilter_lower = itk.ChangeLabelLabelMapFilter[LabelType].New()
+				ChangeLabelLabelMapFilter_lower.SetInput(LabelImageToLabelMapFilter_lower)
+
+				for lbl in LabelLower:
+					ChangeLabelLabelMapFilter_lower.SetChange(lbl, 1)
+				ChangeLabelLabelMapFilter_lower.Update()
+
+				LabelMapToLabelImageFilter_lower = itk.LabelMapToLabelImageFilter[LabelType, ImageType].New()
+				LabelMapToLabelImageFilter_lower.SetInput(ChangeLabelLabelMapFilter_lower)
+				LabelMapToLabelImageFilter_lower.Update()
 				
 				outfile = os.path.normpath('/'.join([out,filename+'_'+"lower_"+tool_name+ext]))
 				SaveFile(outfile, LabelMapToLabelImageFilter_lower.GetOutput(), original_header)
 			
 			else:
+				ChangeLabelLabelMapFilter = itk.ChangeLabelLabelMapFilter[LabelType].New()
+				ChangeLabelLabelMapFilter.SetInput(LabelImageToLabelMapFilter)
+
+				for lbl in range(1, NumberOfLabel):
+					ChangeLabelLabelMapFilter.SetChange(lbl, 1)
+				ChangeLabelLabelMapFilter.Update()
+				
 				LabelMapToLabelImageFilter = itk.LabelMapToLabelImageFilter[LabelType, ImageType].New()
-				LabelMapToLabelImageFilter.SetInput(LabelImageToLabelMapFilter)
+				LabelMapToLabelImageFilter.SetInput(ChangeLabelLabelMapFilter)
 				LabelMapToLabelImageFilter.Update()
 
 				outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
 				SaveFile(outfile, LabelMapToLabelImageFilter.GetOutput(), original_header)
+
+			# outfile = os.path.normpath('/'.join([out,filename+'_raw_'+tool_name+ext]))
+			# SaveFile(outfile, ConnectedComponentImageFilter.GetOutput(), original_header)
 
 		else: #MandSeg
 
@@ -173,7 +194,6 @@ def main(args):
 	
 
 
-
 if __name__ ==  '__main__':
 	parser = argparse.ArgumentParser(description='Post-processing', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -182,7 +202,7 @@ if __name__ ==  '__main__':
 	input_params.add_argument('--original_dir', type=str, help='Input directory with original 3D images', required=True)
 
 	output_params = parser.add_argument_group('Output parameters')
-	output_params.add_argument('--tool', type=str, help='Name of the tool used', default='MandSeg')
+	output_params.add_argument('--tool', type=str, help='Name of the tool used', default='RCSeg')
 	output_params.add_argument('--out', type=str, help='Output directory', required=True)
 
 	args = parser.parse_args()

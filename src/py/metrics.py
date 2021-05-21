@@ -12,20 +12,18 @@ from utils import *
 
 
 def main(args):
-
     out = args.out
     if not os.path.exists(os.path.dirname(out)):
         os.makedirs(os.path.dirname(out))
 
     model_name = args.model_name
     number_epochs = args.epochs
-    neighborhood = args.neighborhood
     batch_size = args.batch_size
     NumberFilters = args.number_filters
     lr = args.learning_rate
     cv_fold = args.cv_fold
-    model_params = ['Number Epochs', 'Neighborhood', 'Batch Size', 'Number Filters', 'Learning Rate', 'CV']
-    param_values = [number_epochs, neighborhood, batch_size, NumberFilters, lr, '']
+    model_params = ['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', 'Empty col', 'CV']
+    param_values = [number_epochs, batch_size, NumberFilters, lr, '', '']
     Params = pd.Series(param_values, index=model_params, name='Params values')
     metrics_names = ['AUC','F1_Score','Accuracy','Sensitivity','Precision','CV fold']
     Metrics = pd.Series(metrics_names, index=model_params, name='Model\Metrics')
@@ -43,14 +41,14 @@ def main(args):
 
     matching_values = (Folder_Metrics.values[:,:-1] == Params.values[:-1]).all(1)
     if not matching_values.any():
-        Folder_Metrics = Folder_Metrics.append(pd.Series(model_params, name='Params', index=model_params), ignore_index=False)
+        Folder_Metrics = Folder_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', 'CV'], name='Params', index=model_params), ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(Params, ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(Metrics, ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(pd.Series(name='', dtype='object'), ignore_index=False)
 
     matching_values = (Image_Metrics.values[:,:-1] == Params.values[:-1]).all(1)
     if not matching_values.any():
-        Image_Metrics = Image_Metrics.append(pd.Series(['Number Epochs', 'Neighborhood', 'Batch Size', 'Number Filters', 'Learning Rate', 'File Name'], name='Params', index=model_params), ignore_index=False)
+        Image_Metrics = Image_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', 'File Name'], name='Params', index=model_params), ignore_index=False)
         Image_Metrics = Image_Metrics.append(pd.Series(param_values, index=model_params, name='Params values'), ignore_index=False)
         Image_Metrics = Image_Metrics.append(pd.Series(['AUC','F1_Score','Accuracy','Sensitivity','Precision','File Name'], index=model_params, name='Model\Metrics'), ignore_index=False)
         Image_Metrics = Image_Metrics.append(pd.Series(name='', dtype='object'), ignore_index=False)
@@ -77,8 +75,8 @@ def main(args):
 
         img_list = []
         for img_fn in glob.iglob(normpath_img, recursive=True):
-            if tool_name == 'RCSeg':
-                img_split = img_fn.split("_")
+            if args.tool == 'RCSeg':
+                img_split = os.path.basename(img_fn).split("_")
                 if img_split[0] == img_split[-2] or (img_split[-2] not in ['upper', 'lower']):
                     img_list.append(img_fn)
             else: 
@@ -97,7 +95,6 @@ def main(args):
         pred_path = img_obj["img"]
         GT_path = img_obj["GT"]
 
-        # auc = f1 = acc = sensitivity = precision = [1]
         auc = []
         f1 = []
         acc = []
@@ -188,6 +185,7 @@ def main(args):
     writer.save()
 
 
+
 if __name__ ==  '__main__':
     parser = argparse.ArgumentParser(description='Evaluation metrics', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -195,6 +193,7 @@ if __name__ ==  '__main__':
     predicted_files = input_params.add_mutually_exclusive_group(required=True)
     predicted_files.add_argument('--pred_img', type=str, help='Input predicted reconstructed 3D image')
     predicted_files.add_argument('--pred_dir', type=str, help='Input directory with predicted reconstructed 3D images')
+
     groundtruth_files = input_params.add_mutually_exclusive_group(required=True)
     groundtruth_files.add_argument('--groundtruth_img', type=str, help='Input original 3D images (ground truth)')
     groundtruth_files.add_argument('--groundtruth_dir', type=str, help='Input directory with original 3D images (ground truth)')
@@ -209,9 +208,7 @@ if __name__ ==  '__main__':
     training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=16)
     training_parameters.add_argument('--learning_rate', type=float, help='', default=0.00001)
     training_parameters.add_argument('--number_filters', type=int, help='', default=16)
-    training_parameters.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (1|3|5|7)', default=1)
     training_parameters.add_argument('--cv_fold', type=int, help='number of the cross-validation fold', default=1)
-
 
     args = parser.parse_args()
 

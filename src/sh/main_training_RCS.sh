@@ -31,7 +31,6 @@ echo "--width                   Width of the images"
 echo "--height                  Height of the images"
 echo "--learning_rate           Learning rate"
 echo "--batch_size              Batch size"
-echo "--neighborhood            Size of the neighborhood slices"
 echo "--NumberFilters           Number of filters"
 echo "--dropout                 Dropout"
 echo "--num_epoch               Number of the epoch of the model to select for the prediction"
@@ -92,8 +91,6 @@ while [ "$1" != "" ]; do
             learning_rate=$1;;
         --batch_size )  shift
             batch_size=$1;;
-        --neighborhood )  shift
-            neighborhood=$1;;
         --NumberFilters )  shift
             NumberFilters=$1;;
         --dropout )  shift
@@ -145,7 +142,6 @@ width="${width:-512}"
 height="${height:-512}"
 learning_rate="${learning_rate:-0.0001}"
 batch_size="${batch_size:-16}"
-neighborhood="${neighborhood:-3}"
 NumberFilters="${NumberFilters:-64}"
 dropout="${dropout:-0.1}"
 num_epoch="${num_epoch:-1}"
@@ -194,7 +190,6 @@ do
             --height $height \
             --learning_rate $learning_rate \
             --batch_size $batch_size \
-            --neighborhood $neighborhood \
             --number_filters $NumberFilters \
             --dropout $dropout
 done
@@ -211,7 +206,6 @@ do
             --load_model $dir_model/$model_name"_"$(basename ${dir})"_"$num_epoch.hdf5 \
             --width $width \
             --height $height \
-            --neighborhood $neighborhood \
             --out $dir_predict
     
     python3 $dir_src/src/py/PostProcess.py \
@@ -229,7 +223,6 @@ do
             --epochs $epochs\
             --learning_rate $learning_rate \
             --batch_size $batch_size \
-            --neighborhood $neighborhood \
             --number_filters $NumberFilters \
             --cv_fold $(basename ${dir})
 
@@ -245,7 +238,6 @@ do
             --load_model $dir_model/$model_name"_"$(basename ${dir})"_"$num_epoch.hdf5 \
             --width $width \
             --height $height \
-            --neighborhood $neighborhood \
             --out $dir_predict
     
     python3 $dir_src/src/py/PostProcess.py \
@@ -263,7 +255,6 @@ do
             --epochs $epochs\
             --learning_rate $learning_rate \
             --batch_size $batch_size \
-            --neighborhood $neighborhood \
             --number_filters $NumberFilters \
             --cv_fold $(basename ${dir})
 done

@@ -18,7 +18,6 @@ echo "--cv_fold                 Number of the fold of the cross validation to se
 echo "--model_name              Name of the model"
 echo "--width                   Width of the images"
 echo "--height                  Height of the images"
-echo "--neighborhood            Size of the neighborhood slices"
 echo "--num_epoch               Number of the epoch of the model to select for the prediction"
 echo "-h|--help                 Print this Help."
 echo
@@ -48,8 +47,6 @@ while [ "$1" != "" ]; do
             width=$1;;
         --height )  shift
             height=$1;;
-        --neighborhood )  shift
-            neighborhood=$1;;
         --num_epoch )  shift
             num_epoch=$1;;
         -h | --help )
@@ -75,7 +72,6 @@ cv_fold="${cv_fold:-1}"
 model_name="${model_name:-CBCT_seg_model}"
 width="${width:-512}"
 height="${height:-512}"
-neighborhood="${neighborhood:-3}"
 num_epoch="${num_epoch:-1}"
 
 
@@ -88,7 +84,6 @@ python3 CBCT_seg/src/py/predict_Seg.py \
     --load_model $dir_model/$modelName/$cv_fold/$modelName"_"$num_epoch.hdf5 \
     --width $width \
     --height $height \
-    --neighborhood $neighborhood \
     --out $dir_predict
 
 python3 CBCT_seg/src/py/PostProcess.py \

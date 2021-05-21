@@ -12,9 +12,9 @@ python 3.7.9 with the librairies: //add librairies
 
 CBCT_seg is a tool for CBCT segmentation based on a machine learning approach.
 
-The Convolutional Neural Network (CNN) used is a 2.5D U-Net.
+The Convolutional Neural Network (CNN) used is a 2D U-Net.
 
-It takes several CBCT scan in input, with the extensions: .nrrd, .nii, .gipl (with .gz or not)
+It takes several CBCT scan in input, with the extensions: .nii | nii.gz, .gipl | .gipl.gz, .nrrd
 
 ## Running the code
 
@@ -28,7 +28,7 @@ input: folder containing all the scans and segmentations
 
 output: folder containing the scans and segmentations divided into training/testing. The training folder is also divided into the number of folds wanted.
 
-Takes a folder, searches into all the subfolders and seperates the scans ans the segmentations. Moves thoses files into the output folder. A training folder and a testing folder are created (the training folder is devided into the specified number of folds). The percentage or number of files for testing is selected randomly inside each folder, according to the propotion of files in each of them, to prevent class imbalance.
+Takes a folder, searches into all the subfolders and seperates the scans and the segmentations. Moves thoses files into the output folder. A training folder and a testing folder are created (the training folder is devided into the specified number of folds). The percentage or number of files for testing is selected randomly inside each folder, according to the propotion of files in each of them, to prevent class imbalance.
 
 ```
 usage: CV_folds.py [-h] --dir DIR --out OUT [--cv_folds CV_FOLDS]
@@ -39,23 +39,23 @@ Creation of the cross-validation folders
 optional arguments:
   -h, --help            show this help message and exit
 
-Input file:
+Input files:
   --dir DIR             Input directory with 3D images (default: None)
 
 Output parameters:
   --out OUT             Output directory (default: None)
   --cv_folds CV_FOLDS   Number of folds to create (default: 10)
   --testing_number TESTING_NUMBER
-                        Number of scans to keep for testing (default: None)
+                        Number of scans to keep for testing (default: 1)
   --testing_percentage TESTING_PERCENTAGE
                         Percentage of scans to keep for testing (default: 20)
 ```
 
 ### Pre-Processing
 
-python3 src/py/PreProcess.py 
+- python3 src/py/PreProcess.py 
 
-input: 3D CBCT scans (.nrrd, .nii, .gipl (with .gz or not))
+input: 3D CBCT scans (.nii | nii.gz, .gipl | .gipl.gz, .nrrd)
 
 output: 2D .png slices from the scans
 
@@ -73,7 +73,7 @@ Pre-processing
 optional arguments:
   -h, --help            show this help message and exit
 
-Input file:
+Input files:
   --image IMAGE         Input 3D image (default: None)
   --dir DIR             Input directory with 3D images (default: None)
 
@@ -89,32 +89,156 @@ Output parameters:
   --out OUT             Output directory (default: None)
 ```
 
+
+- python3 src/py/labels_preprocess.py 
+
+input: 3D CBCT labels (.nii | nii.gz, .gipl | .gipl.gz, .nrrd)
+
+output: 2D .png slices from the labels
+
+Takes a single label or a directory and deconstructs the 3D scan into 2D slices
+
+```
+usage: labels_preprocess.py [-h] (--image IMAGE | --dir DIR)
+                            [--desired_width DESIRED_WIDTH]
+                            [--desired_height DESIRED_HEIGHT] [--out OUT]
+
+Label pre-processing
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+Input files:
+  --image IMAGE         Input 3D label (default: None)
+  --dir DIR             Input directory with 3D labels (default: None)
+
+Resizing parameters:
+  --desired_width DESIRED_WIDTH
+  --desired_height DESIRED_HEIGHT
+
+Output parameters:
+  --out OUT             Output directory of the label slices (default: None)
+```
+
 ### Training
+
+#### Data augmentation
+
+> The data augmentation used in the training applies random rotation, shift, shear and zoom.
+
+python3 src/py/heat_map.py 
+
+input: Database that contains the labels
+
+output: Save the the heat map
+
+Visualisation of the data augmentation that is applied on your dataset
+
+```
+usage: heat_map.py [-h] --dir_database DIR_DATABASE [--width WIDTH]
+                   [--height HEIGHT] [--out OUT]
+
+Visualization of the data augmentation
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+Input files:
+  --dir_database DIR_DATABASE
+                        Input dir of the labels (default: None)
+
+label parameters:
+  --width WIDTH
+  --height HEIGHT
+
+Output parameters:
+  --out OUT             Output file (default: None)
+```
+
+#### Training  model
+
+The neural network choosen is a U-Net architecture. The loss function is the *BinaryCrossentropy*. The metrics monitered during the training were the *Recall, Precision and AUC* metrics. 
 
 python3 src/py/training_Seg.py 
 
-input: 
+input: The scans and labels for the training
 
-output: 
+output: The model
 
-explainations
+The algorithm takes as an input the training fold. It will use one of the cross validation folder as a validation set and the rest as a training set. The *save_frequence* parameter allow you to save the model at specific epochs. 
 
 ```
-help
+usage: training_Seg.py [-h] --dir_train DIR_TRAIN --val_folds VAL_FOLDS
+                       [VAL_FOLDS ...] --save_model SAVE_MODEL --log_dir
+                       LOG_DIR [--model_name MODEL_NAME] [--epochs EPOCHS]
+                       [--save_frequence SAVE_FREQUENCE] [--width WIDTH]
+                       [--height HEIGHT] [--batch_size BATCH_SIZE]
+                       [--learning_rate LEARNING_RATE]
+                       [--number_filters NUMBER_FILTERS] [--dropout DROPOUT]
+
+Training a neural network
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+Input files:
+  --dir_train DIR_TRAIN
+                        Input training folder (default: None)
+  --val_folds VAL_FOLDS [VAL_FOLDS ...]
+                        Fold of the cross-validation to keep for validation
+                        (default: None)
+  --save_model SAVE_MODEL
+                        Directory to save the model (default: None)
+  --log_dir LOG_DIR     Directory for the logs of the model (default: None)
+
+training parameters:
+  --model_name MODEL_NAME
+                        Name of the model (default: CBCT_seg_model)
+  --epochs EPOCHS       Number of epochs (default: 20)
+  --save_frequence SAVE_FREQUENCE
+                        Epoch frequence to save the model (default: 5)
+  --width WIDTH
+  --height HEIGHT
+  --batch_size BATCH_SIZE
+                        Batch size value (default: 32)
+  --learning_rate LEARNING_RATE
+                        Learning rate (default: 0.0001)
+  --number_filters NUMBER_FILTERS
+                        Number of filters (default: 32)
+  --dropout DROPOUT     Dropout (default: 0.1)
 ```
 
 ### Prediction
 
 python3 src/py/predict_Seg.py 
 
-input: 
+input: 2D slices form CBCT scans
 
-output: 
+output: 2D slices predicted by the model
 
-explainations
+Takes 2D slices as an input from a CBCT scan and output the label predicted for each slices.
 
 ```
-help
+usage: predict_Seg.py [-h] --dir_predict DIR_PREDICT [--width WIDTH]
+                      [--height HEIGHT] --load_model LOAD_MODEL --out OUT
+
+Prediction
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+Input files:
+  --dir_predict DIR_PREDICT
+                        Input dir to be predicted (default: None)
+
+Predict parameters:
+  --width WIDTH
+  --height HEIGHT
+  --load_model LOAD_MODEL
+                        Path of the trained model (default: None)
+
+Output parameters:
+  --out OUT             Output directory (default: None)
 ```
 
 ### Post-Processing
@@ -129,20 +253,22 @@ Takes an input directory containing .png slices and reconstructs the 3D image. S
 Post-processing will be added to this function.
 
 ```
-usage: PostProcess.py [-h] --dir DIR --original_dir ORIGINAL_DIR --out OUT
+usage: PostProcess.py [-h] --dir DIR --original_dir ORIGINAL_DIR [--tool TOOL]
+                      --out OUT
 
 Post-processing
 
 optional arguments:
   -h, --help            show this help message and exit
 
-Input file:
+Input files:
   --dir DIR             Input directory with 2D images (default: None)
   --original_dir ORIGINAL_DIR
                         Input directory with original 3D images (default:
                         None)
 
 Output parameters:
+  --tool TOOL           Name of the tool used (default: RCSeg)
   --out OUT             Output directory (default: None)
 ```
 
@@ -160,11 +286,10 @@ If the output excel file already exist, it adds the results into a new line.
 ```
 usage: metrics.py [-h] (--pred_img PRED_IMG | --pred_dir PRED_DIR)
                   (--groundtruth_img GROUNDTRUTH_IMG | --groundtruth_dir GROUNDTRUTH_DIR)
-                  --out OUT [--sheet_name SHEET_NAME]
-                  [--model_name MODEL_NAME] [--epochs EPOCHS]
-                  [--batch_size BATCH_SIZE] [--learning_rate LEARNING_RATE]
-                  [--number_filters NUMBER_FILTERS]
-                  [--neighborhood {1,3,5,7,9}] [--cv_fold CV_FOLD]
+                  --out OUT [--tool TOOL] [--model_name MODEL_NAME]
+                  [--epochs EPOCHS] [--batch_size BATCH_SIZE]
+                  [--learning_rate LEARNING_RATE]
+                  [--number_filters NUMBER_FILTERS] [--cv_fold CV_FOLD]
 
 Evaluation metrics
 
@@ -184,19 +309,16 @@ Input files:
 
 Output parameters:
   --out OUT             Output filename (default: None)
-  --sheet_name SHEET_NAME
-                        Name of the excel sheet to write on (default: Sheet1)
 
-Universal ID parameters:
+Training parameters:
+  --tool TOOL           Name of the tool used (default: MandSeg)
   --model_name MODEL_NAME
                         name of the model (default: CBCT_seg_model)
   --epochs EPOCHS       name of the model (default: 20)
   --batch_size BATCH_SIZE
-                        batch_size value (default: 32)
+                        batch_size value (default: 16)
   --learning_rate LEARNING_RATE
   --number_filters NUMBER_FILTERS
-  --neighborhood {1,3,5,7,9}
-                        neighborhood slices (3|5|7) (default: 3)
   --cv_fold CV_FOLD     number of the cross-validation fold (default: 1)
 ```
 
