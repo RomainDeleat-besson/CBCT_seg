@@ -10,9 +10,8 @@ python 3.7.9 with the librairies:
 
 - Main librairies:
 
-> tensorflow==2.4.1
-
-> tensorflow-gpu==2.4.0
+> tensorflow==2.4.1 \
+> tensorflow-gpu==2.4.0 
 
 > Pillow==7.2.0
 
