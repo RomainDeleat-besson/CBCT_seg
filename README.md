@@ -11,15 +11,22 @@ python 3.7.9 with the librairies:
 - Main librairies:
 
 > tensorflow==2.4.1
+
 > tensorflow-gpu==2.4.0
+
 > Pillow==7.2.0
+
 > numpy==1.19.5
+
 > itk==5.2.0
+
 > scikit-image==0.16.2
+
 > scikit-learn==0.23.1
+
 > scipy==1.5.0
 
-- Details librairies
+- Detailed librairies
 
 
 

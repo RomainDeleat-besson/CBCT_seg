@@ -184,7 +184,7 @@ def main(args):
 			Max = max(labelSize)
 
 			RelabelComponentImageFilter = itk.RelabelComponentImageFilter[ImageType, ImageType].New()
-			RelabelComponentImageFilter.SetInput(label)
+			RelabelComponentImageFilter.SetInput(ConnectedComponentImageFilter.GetOutput())
 			RelabelComponentImageFilter.SetMinimumObjectSize(Max)
 			RelabelComponentImageFilter.Update()
 			relabeled_itk_img = RelabelComponentImageFilter.GetOutput()
