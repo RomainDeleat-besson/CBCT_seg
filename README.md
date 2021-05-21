@@ -14,7 +14,7 @@ python 3.7.9 with the librairies:
 > tensorflow-gpu==2.4.0 \
 > Pillow==7.2.0 \
 > numpy==1.19.5 \
-> itk==5.2.0 \
+> itk==5.2.0 
 
 **Detailed librairies**
 
