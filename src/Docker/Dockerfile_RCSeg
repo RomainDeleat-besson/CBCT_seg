@@ -1,0 +1,20 @@
+FROM python:3.7
+
+RUN apt-get update && \
+	apt-get install -y git
+
+RUN mkdir /app
+WORKDIR /app
+
+RUN wget https://github.com/RomainUSA/CBCT_seg/archive/refs/tags/v2.2.zip
+RUN unzip v2.2.zip
+RUN mv CBCT_seg-2.2/src src
+RUN rm -rf v2.2.zip \
+	rm -rf CBCT_seg-2.2
+
+RUN pip3 install -r /app/src/requirements.txt
+
+RUN mkdir /app/model
+WORKDIR /app/model
+RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v2.2/RCS_model_Unet_ROI_1_40.hdf5
+
