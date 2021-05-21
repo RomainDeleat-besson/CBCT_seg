@@ -49,7 +49,7 @@ while [ "$1" != "" ]; do
 done
 
 dir_src="${dir_src:-./CBCT_seg/src}"
-dir_input="${dir_cv:-./Scans}"
+dir_input="${dir_input:-./Scans}"
 dir_output="${dir_output:-$dir_input}"
 
 min_percentage="${min_percentage:-30}"
