@@ -1,7 +1,7 @@
 import argparse
 import datetime
-import random
 import os
+import random
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,15 +11,13 @@ from models import *
 from utils import *
 
 
-
 def main(args):
     InputDir = args.dir_database
+    out = args.out
     InputdirLabel = [os.path.join(InputDir,fold,'Segs') for fold in os.listdir(InputDir) if not fold.startswith(".")]
 
     width = args.width
     height = args.height
-    neighborhood = args.neighborhood
-
 
     print("Loading paths...")
     # Input files and labels
@@ -27,7 +25,7 @@ def main(args):
 
     print("Pre-processing...")
     # Read and process the input files
-    y_train    = np.array([Array_2_5D(path, label_paths, width, height, neighborhood, label=True) for path in label_paths])
+    y_train    = np.array([Array_2_5D(path, label_paths, width, height, label=True) for path in label_paths])
     y_train = np.reshape(y_train, y_train.shape+(1,))
     print("shape label:", np.shape(y_train))
     heat_map_true = np.sum(y_train, axis=0)
@@ -46,19 +44,22 @@ def main(args):
     fig.add_subplot(1, 2, 2)
     plt.imshow(heat_map_aug, cmap='hot', interpolation='nearest')
     plt.show()
-
+    plt.savefig(out)
 
 
 
 if __name__ ==  '__main__':
-    parser = argparse.ArgumentParser(description='Data augmentation visualization', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description='Visualization of the data augmentation', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
     input_path = parser.add_argument_group('Input files')
     input_path.add_argument('--dir_database', type=str, help='Input dir of the labels', required=True)
 
     param = parser.add_argument_group('label parameters')
     param.add_argument('--width', type=int, default=512)
     param.add_argument('--height', type=int, default=512)
-    param.add_argument('--neighborhood', type=int, choices=[1,3,5,7,9], help='neighborhood slices (1|3|5|7)', default=1)
+
+    output_params = parser.add_argument_group('Output parameters')
+    output_params.add_argument('--out', type=str, help='Output file')
      
     args = parser.parse_args()
 

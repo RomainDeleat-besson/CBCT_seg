@@ -6,7 +6,6 @@ from utils import *
 
 
 def main(args):
-
 	desired_width = args.desired_width
 	desired_height = args.desired_height
 	min_percentage = args.min_percentage
@@ -29,16 +28,12 @@ def main(args):
 				img_obj["out"] = os.path.normpath("/".join([args.out]))
 				img_fn_array.append(img_obj)
 
-
 	for img_obj in img_fn_array:
 		image = img_obj["img"]
 		out = img_obj["out"]
 
 		if not os.path.exists(out):
 			os.makedirs(out)
-		# else:
-		# 	shutil.rmtree(out)
-		# 	os.makedirs(out)
 		
 		img, header = ReadFile(image)
 		
@@ -48,6 +43,7 @@ def main(args):
 		img = Adjust_Contrast(img,pmin=min_percentage,pmax=max_percentage)
 
 		Deconstruction(img, image, out, desired_width, desired_height)
+
 
 		
 if __name__ ==  '__main__':
