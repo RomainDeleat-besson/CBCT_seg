@@ -6,12 +6,49 @@ import os
 import itk
 import numpy as np
 import pandas as pd
+from numba import jit, prange
 from sklearn import metrics
 
 from utils import *
 
 
+@jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
+def compute_tp_tn_fn_fp (y_true, y_pred):
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
+    for i in prange(y_pred.size):
+        tp += y_true[i] * y_pred[i]
+        tn += (1-y_true[i]) * (1-y_pred[i])
+        fp += (1-y_true[i]) * y_pred[i]
+        fn += y_true[i] * (1-y_pred[i])
+         
+    return tp, fp, fn
+
+def compute_precision(tp, fp):
+    return tp / (tp + fp)
+
+def compute_recall(tp, fn):
+    return tp / (tp + fn)
+
+def compute_f1_score(precision, recall):
+    return (2*precision*recall) / (precision + recall)
+
+def compute_accuracy(tp,tn,fp,fn):
+    return (tp + tn)/(tp + tn + fp + fn)
+
+def compute_auc(GT, pred):
+    return metrics.roc_auc_score(GT, pred)
+
+
 def main(args):
+    #====== Numba compilation ======
+    # The 2 lines are important
+    compute_tp_tn_fn_fp(np.array([0,0,0], dtype=np.uint8), np.array([0,1,0], dtype=np.uint8))
+    compute_tp_tn_fn_fp(np.array([0,0,0], dtype=np.float32), np.array([0,1,0], dtype=np.float32))
+    #===============================
+
     out = args.out
     if not os.path.exists(os.path.dirname(out)):
         os.makedirs(os.path.dirname(out))
@@ -25,7 +62,7 @@ def main(args):
     model_params = ['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', 'Empty col', 'CV']
     param_values = [number_epochs, batch_size, NumberFilters, lr, '', '']
     Params = pd.Series(param_values, index=model_params, name='Params values')
-    metrics_names = ['AUC','F1_Score','Accuracy','Sensitivity','Precision','CV fold']
+    metrics_names = ['AUC','F1_Score','Accuracy','recall','Precision','CV fold']
     Metrics = pd.Series(metrics_names, index=model_params, name='Model\Metrics')
 
     if not os.path.exists(out): 
@@ -39,18 +76,18 @@ def main(args):
         Image_Metrics = pd.read_excel(Metrics_file, 'Sheet2', index_col=0, header=None)
         Image_Metrics.columns = model_params
 
-    matching_values = (Folder_Metrics.values[:,:-1] == Params.values[:-1]).all(1)
+    matching_values = (Folder_Metrics.values[:,:-2] == Params.values[:-2]).all(1)
     if not matching_values.any():
         Folder_Metrics = Folder_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', 'CV'], name='Params', index=model_params), ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(Params, ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(Metrics, ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(pd.Series(name='', dtype='object'), ignore_index=False)
 
-    matching_values = (Image_Metrics.values[:,:-1] == Params.values[:-1]).all(1)
+    matching_values = (Image_Metrics.values[:,:-2] == Params.values[:-2]).all(1)
     if not matching_values.any():
         Image_Metrics = Image_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', 'File Name'], name='Params', index=model_params), ignore_index=False)
         Image_Metrics = Image_Metrics.append(pd.Series(param_values, index=model_params, name='Params values'), ignore_index=False)
-        Image_Metrics = Image_Metrics.append(pd.Series(['AUC','F1_Score','Accuracy','Sensitivity','Precision','File Name'], index=model_params, name='Model\Metrics'), ignore_index=False)
+        Image_Metrics = Image_Metrics.append(pd.Series(['AUC','F1_Score','Accuracy','recall','Precision','File Name'], index=model_params, name='Model\Metrics'), ignore_index=False)
         Image_Metrics = Image_Metrics.append(pd.Series(name='', dtype='object'), ignore_index=False)
 
     arrays = [range(len(Folder_Metrics)), Folder_Metrics.index]
@@ -59,8 +96,8 @@ def main(args):
     arrays = [range(len(Image_Metrics)), Image_Metrics.index]
     Index = pd.MultiIndex.from_arrays(arrays, names=('number', 'name'))
     Image_Metrics.set_index(Index, inplace=True)
-    idx1 = Folder_Metrics[(Folder_Metrics.values[:,:-1] == Params.values[:-1]).all(1)].index.get_level_values('number').tolist()[0]
-    idx2 = Image_Metrics[(Image_Metrics.values[:,:-1] == Params.values[:-1]).all(1)].index.get_level_values('number').tolist()[0]
+    idx1 = Folder_Metrics[(Folder_Metrics.values[:,:-2] == Params.values[:-2]).all(1)].index.get_level_values('number').tolist()[0]
+    idx2 = Image_Metrics[(Image_Metrics.values[:,:-2] == Params.values[:-2]).all(1)].index.get_level_values('number').tolist()[0]
     img_fn_array = []
 
     if args.pred_img:
@@ -95,12 +132,6 @@ def main(args):
         pred_path = img_obj["img"]
         GT_path = img_obj["GT"]
 
-        auc = []
-        f1 = []
-        acc = []
-        sensitivity = []
-        precision = []
-
         pred, _ = ReadFile(pred_path)
         GT, _ = ReadFile(GT_path, verbose=0)
 
@@ -111,26 +142,41 @@ def main(args):
         GT[GT<=0.5]=0
         GT[GT>0.5]=1
 
-        for slice in range(len(pred)):
-            slice_pred = pred[slice]
-            slice_GT = GT[slice]
-            if slice_GT.max() != 0 or slice_pred.max() != 0:
-                for row in range(len(slice_pred)):
-                    row_pred = slice_pred[row]
-                    row_GT = slice_GT[row]
-                    if row_GT.max() != 0 or row_pred.max() != 0:
-                        if row_GT.max()==0: 
-                            row_GT[0]=1
-                            row_pred[0]=1
-                        auc.append(metrics.roc_auc_score(row_GT, row_pred))
-                        f1.append(metrics.f1_score(row_GT, row_pred))
-                        acc.append(metrics.accuracy_score(row_GT, row_pred))
-                        sensitivity.append(metrics.recall_score(row_GT, row_pred))
-                        precision.append(metrics.precision_score(row_GT, row_pred, zero_division=0))
+        import time
+        startTime = time.time()
 
-        metrics_line = [sum(val)/len(val) for val in [auc,f1,acc,sensitivity,precision]]
+        pred = np.array(pred).flatten()
+
+        GT = np.array(GT).flatten()
+        GT = np.uint8(GT > 0.5)
+
+        # pred = pred.ravel()
+        # GT = GT.ravel()
+
+        # auc = metrics.roc_auc_score(GT, pred)
+        # acc = metrics.accuracy_score(GT, pred)
+        # recall = metrics.recall_score(GT, pred)
+        # precision = metrics.precision_score(GT, pred, zero_division=0)
+        # f1 = 2*(recall*precision)/(recall+precision)
+
+
+        tp, tn, fp, fn = compute_tp_tn_fn_fp(GT, pred)
+        recall = compute_recall(tp, fn)
+        precision = compute_precision(tp, fp)
+        f1 = compute_f1_score(precision, recall)
+        acc = compute_accuracy(tp, tn, fp, fn)
+        auc = compute_auc(GT, pred)
+
+
+        metrics_line = [auc,f1,acc,recall,precision]
         metrics_line.append(os.path.basename(pred_path).split('.')[0])
         total_values.loc[len(total_values)] = metrics_line
+
+
+        stopTime = time.time()
+        print('Processing completed in {0:.2f} seconds'.format(stopTime-startTime))
+
+
 
     means = total_values[total_values.columns.drop('CV')].mean()
     stds = total_values[total_values.columns.drop('CV')].std()
