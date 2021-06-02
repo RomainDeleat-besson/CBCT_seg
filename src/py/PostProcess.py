@@ -21,8 +21,6 @@ def main(args):
 	if not os.path.exists(out):
 		os.makedirs(out)
 
-	original_img_paths = [ori_fn for ori_fn in glob.iglob(os.path.normpath("/".join([original_dir, '*', ''])), recursive=True)]
-
 	for original_img_path in glob.iglob(os.path.normpath("/".join([original_dir, '*', ''])), recursive=True):
 		print("============================================")
 		
@@ -36,9 +34,9 @@ def main(args):
 		if '.nrrd' in original_img_path: ext='.nrrd'
 		if '.gz' in original_img_path: ext=ext+'.gz'
 
-		img = Reconstruction(filename,dir,original_img,out)
-		thresh=threshold_otsu(img)-20
-		print("Otsu's threshold: ", thresh)
+		img = Reconstruction(filename,dir,original_img)
+		thresh=50
+		# print("Threshold: ", thresh)
 		img[img<thresh]=0
 		img[img>=thresh]=255
 		img = img.astype(np.ushort)
@@ -94,10 +92,10 @@ def main(args):
 			LabelImageToLabelMapFilter.Update()
 
 			distance_clusters = abs(mean_cluster_0 - mean_cluster_1)
-			print("dist mean cluster:", distance_clusters)
+			print("dist mean cluster:", distance_clusters)	
 
 			# Condition to know if there are 2 jaws in the scan
-			if distance_clusters > 40:
+			if distance_clusters > 40 and not (NumberCluster[0]<=6 or NumberCluster[1]<=6):
 				RelabelComponentImageFilter_upper = itk.image_duplicator(RelabelComponentImageFilter)
 				RelabelComponentImageFilter_lower = itk.image_duplicator(RelabelComponentImageFilter)
 
@@ -153,6 +151,17 @@ def main(args):
 				SaveFile(outfile, LabelMapToLabelImageFilter_lower.GetOutput(), original_header)
 			
 			else:
+				if NumberCluster[0] > NumberCluster[1]:
+					artifact = 1
+				else:
+					artifact = 0
+
+				if distance_clusters > 40 :
+					for i in range(NumberOfLabel-1):
+						if kmeans.labels_[i] == artifact:
+							LabelImageToLabelMapFilter.GetOutput().RemoveLabel(i+1)
+				LabelImageToLabelMapFilter.Update()
+
 				ChangeLabelLabelMapFilter = itk.ChangeLabelLabelMapFilter[LabelType].New()
 				ChangeLabelLabelMapFilter.SetInput(LabelImageToLabelMapFilter)
 
@@ -171,7 +180,6 @@ def main(args):
 			# SaveFile(outfile, ConnectedComponentImageFilter.GetOutput(), original_header)
 
 		else: #MandSeg
-
 			labelStatisticsImageFilter = itk.LabelStatisticsImageFilter[ImageType, ImageType].New()
 			labelStatisticsImageFilter.SetLabelInput(ConnectedComponentImageFilter.GetOutput())
 			labelStatisticsImageFilter.SetInput(itk_img)

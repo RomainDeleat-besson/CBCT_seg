@@ -250,7 +250,7 @@ def create_dataset(x, y, BATCH_SIZE):
 # Post-process functions
 # #####################################
 
-def Reconstruction(filename, dir, original_img, outdir):
+def Reconstruction(filename, dir, original_img):
     """Reconstruction of a 3D scan from the 2D slices"""
     size = original_img.shape
     img = np.zeros(size)
