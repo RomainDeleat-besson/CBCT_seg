@@ -21,8 +21,6 @@ def main(args):
 	if not os.path.exists(out):
 		os.makedirs(out)
 
-	original_img_paths = [ori_fn for ori_fn in glob.iglob(os.path.normpath("/".join([original_dir, '*', ''])), recursive=True)]
-
 	for original_img_path in glob.iglob(os.path.normpath("/".join([original_dir, '*', ''])), recursive=True):
 		print("============================================")
 		
@@ -37,8 +35,8 @@ def main(args):
 		if '.gz' in original_img_path: ext=ext+'.gz'
 
 		img = Reconstruction(filename,dir,original_img,out)
-		thresh=threshold_otsu(img)-20
-		print("Otsu's threshold: ", thresh)
+		thresh=int(round(threshold_otsu(img)/2))
+		print("Threshold: ", thresh)
 		img[img<thresh]=0
 		img[img>=thresh]=255
 		img = img.astype(np.ushort)
@@ -191,6 +189,11 @@ def main(args):
 
 			outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
 			SaveFile(outfile, itk.GetArrayFromImage(relabeled_itk_img), original_header)
+
+			# if not os.path.exists(out+'_raw'):
+			# 	os.makedirs(out+'_raw')
+			# outfile = os.path.normpath('/'.join([out+'_raw',filename+'_raw_'+tool_name+ext]))
+			# SaveFile(outfile, itk.GetArrayFromImage(itk_img), original_header)
 	
 
 
@@ -202,7 +205,7 @@ if __name__ ==  '__main__':
 	input_params.add_argument('--original_dir', type=str, help='Input directory with original 3D images', required=True)
 
 	output_params = parser.add_argument_group('Output parameters')
-	output_params.add_argument('--tool', type=str, help='Name of the tool used', default='RCSeg')
+	output_params.add_argument('--tool', type=str, help='Name of the tool used', default='MandSeg')
 	output_params.add_argument('--out', type=str, help='Output directory', required=True)
 
 	args = parser.parse_args()
