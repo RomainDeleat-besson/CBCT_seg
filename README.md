@@ -1,6 +1,6 @@
 # CBCT_seg
 
-Contributors : Celia Le, Romain Deleat-Besson
+Contributors: Celia Le, Romain Deleat-Besson, Loris Bert (NYU)
 
 Scripts for MandSeg and RootCanalSeg projects
 

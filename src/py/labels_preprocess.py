@@ -2,7 +2,6 @@ import argparse
 import glob
 import os
 
-import itk
 import numpy as np
 
 from utils import *

@@ -3,11 +3,7 @@ import gzip
 import os
 import random
 import re
-import sys
 
-import imageio
-import itk
-import matplotlib.pyplot as plt
 import medpy.io
 import nibabel as nib
 import nrrd

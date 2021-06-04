@@ -2,8 +2,8 @@ import argparse
 import glob
 import math
 import os
+import time
 
-import itk
 import numpy as np
 import pandas as pd
 from numba import jit, prange
@@ -13,7 +13,7 @@ from utils import *
 
 
 @jit(nopython=True, nogil=True, cache=True, parallel=True, fastmath=True)
-def compute_tp_tn_fn_fp (y_true, y_pred):
+def compute_tp_tn_fp_fn(y_true, y_pred):
     tp = 0
     tn = 0
     fp = 0
@@ -24,7 +24,7 @@ def compute_tp_tn_fn_fp (y_true, y_pred):
         fp += (1-y_true[i]) * y_pred[i]
         fn += y_true[i] * (1-y_pred[i])
          
-    return tp, fp, fn
+    return tp, tn, fp, fn
 
 def compute_precision(tp, fp):
     return tp / (tp + fp)
@@ -45,8 +45,8 @@ def compute_auc(GT, pred):
 def main(args):
     #====== Numba compilation ======
     # The 2 lines are important
-    compute_tp_tn_fn_fp(np.array([0,0,0], dtype=np.uint8), np.array([0,1,0], dtype=np.uint8))
-    compute_tp_tn_fn_fp(np.array([0,0,0], dtype=np.float32), np.array([0,1,0], dtype=np.float32))
+    compute_tp_tn_fp_fn(np.array([0,0,0], dtype=np.uint8), np.array([0,1,0], dtype=np.uint8))
+    compute_tp_tn_fp_fn(np.array([0,0,0], dtype=np.float32), np.array([0,1,0], dtype=np.float32))
     #===============================
 
     out = args.out
@@ -129,6 +129,7 @@ def main(args):
     total_values = pd.DataFrame(columns=model_params)
     
     for img_obj in img_fn_array:
+        startTime = time.time()
         pred_path = img_obj["img"]
         GT_path = img_obj["GT"]
 
@@ -142,40 +143,24 @@ def main(args):
         GT[GT<=0.5]=0
         GT[GT>0.5]=1
 
-        import time
-        startTime = time.time()
-
         pred = np.array(pred).flatten()
 
         GT = np.array(GT).flatten()
         GT = np.uint8(GT > 0.5)
 
-        # pred = pred.ravel()
-        # GT = GT.ravel()
-
-        # auc = metrics.roc_auc_score(GT, pred)
-        # acc = metrics.accuracy_score(GT, pred)
-        # recall = metrics.recall_score(GT, pred)
-        # precision = metrics.precision_score(GT, pred, zero_division=0)
-        # f1 = 2*(recall*precision)/(recall+precision)
-
-
-        tp, tn, fp, fn = compute_tp_tn_fn_fp(GT, pred)
+        tp, tn, fp, fn = compute_tp_tn_fp_fn(GT, pred)
         recall = compute_recall(tp, fn)
         precision = compute_precision(tp, fp)
         f1 = compute_f1_score(precision, recall)
         acc = compute_accuracy(tp, tn, fp, fn)
         auc = compute_auc(GT, pred)
 
-
         metrics_line = [auc,f1,acc,recall,precision]
         metrics_line.append(os.path.basename(pred_path).split('.')[0])
         total_values.loc[len(total_values)] = metrics_line
 
-
         stopTime = time.time()
         print('Processing completed in {0:.2f} seconds'.format(stopTime-startTime))
-
 
 
     means = total_values[total_values.columns.drop('CV')].mean()

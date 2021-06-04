@@ -1,9 +1,7 @@
 import argparse
 import datetime
 import os
-import random
 
-import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard

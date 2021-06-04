@@ -3,8 +3,6 @@ import os
 from collections import Counter
 
 import itk
-import matplotlib.pyplot as plt
-import nibabel as nib
 import numpy as np
 from skimage.filters import threshold_otsu
 from sklearn.cluster import KMeans

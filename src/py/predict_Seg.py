@@ -1,10 +1,7 @@
 import argparse
 import datetime
-import glob
 import os
-import shutil
 
-import itk
 import numpy as np
 import tensorflow as tf
 
