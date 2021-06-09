@@ -35,12 +35,22 @@ def compute_recall(tp, fn):
 def compute_f1_score(precision, recall):
     return (2*precision*recall) / (precision + recall)
 
+def compute_fbeta_score(precision, recall, beta):
+    return ((1 + beta**2) * precision * recall) / (beta**2 * precision + recall)
+
 def compute_accuracy(tp,tn,fp,fn):
     return (tp + tn)/(tp + tn + fp + fn)
 
 def compute_auc(GT, pred):
     return metrics.roc_auc_score(GT, pred)
 
+def compute_auprc(GT, pred):
+    prec, rec, thresholds = metrics.precision_recall_curve(GT, pred)
+    return metrics.auc(prec, rec)
+
+def compute_average_precision(GT, pred):
+    return metrics.average_precision_score(GT, pred)
+    
 
 def main(args):
     #====== Numba compilation ======
@@ -59,10 +69,10 @@ def main(args):
     NumberFilters = args.number_filters
     lr = args.learning_rate
     cv_fold = args.cv_fold
-    model_params = ['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', 'Empty col', 'CV']
-    param_values = [number_epochs, batch_size, NumberFilters, lr, '', '']
+    model_params = ['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', 'Empty col', 'Empty col2', 'Empty col3', 'CV']
+    param_values = [number_epochs, batch_size, NumberFilters, lr, '', '', '', '']
     Params = pd.Series(param_values, index=model_params, name='Params values')
-    metrics_names = ['AUC','F1_Score','Accuracy','recall','Precision','CV fold']
+    metrics_names = ['AUC','AUPRC','F1_Score','Fbeta_Score','Accuracy','Recall','Precision','CV fold']
     Metrics = pd.Series(metrics_names, index=model_params, name='Model\Metrics')
 
     if not os.path.exists(out): 
@@ -78,16 +88,16 @@ def main(args):
 
     matching_values = (Folder_Metrics.values[:,:-2] == Params.values[:-2]).all(1)
     if not matching_values.any():
-        Folder_Metrics = Folder_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', 'CV'], name='Params', index=model_params), ignore_index=False)
+        Folder_Metrics = Folder_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', '', '', 'CV'], name='Params', index=model_params), ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(Params, ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(Metrics, ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(pd.Series(name='', dtype='object'), ignore_index=False)
 
     matching_values = (Image_Metrics.values[:,:-2] == Params.values[:-2]).all(1)
     if not matching_values.any():
-        Image_Metrics = Image_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', 'File Name'], name='Params', index=model_params), ignore_index=False)
+        Image_Metrics = Image_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', '', '', 'File Name'], name='Params', index=model_params), ignore_index=False)
         Image_Metrics = Image_Metrics.append(pd.Series(param_values, index=model_params, name='Params values'), ignore_index=False)
-        Image_Metrics = Image_Metrics.append(pd.Series(['AUC','F1_Score','Accuracy','recall','Precision','File Name'], index=model_params, name='Model\Metrics'), ignore_index=False)
+        Image_Metrics = Image_Metrics.append(pd.Series(['AUC','AUPRC','F1_Score','Fbeta_Score','Accuracy','Recall','Precision','File Name'], index=model_params, name='Model\Metrics'), ignore_index=False)
         Image_Metrics = Image_Metrics.append(pd.Series(name='', dtype='object'), ignore_index=False)
 
     arrays = [range(len(Folder_Metrics)), Folder_Metrics.index]
@@ -152,10 +162,12 @@ def main(args):
         recall = compute_recall(tp, fn)
         precision = compute_precision(tp, fp)
         f1 = compute_f1_score(precision, recall)
+        fbeta = compute_fbeta_score(precision, recall, 2)
         acc = compute_accuracy(tp, tn, fp, fn)
         auc = compute_auc(GT, pred)
+        auprc = compute_auprc(GT, pred)
 
-        metrics_line = [auc,f1,acc,recall,precision]
+        metrics_line = [auc,auprc,f1,fbeta,acc,recall,precision]
         metrics_line.append(os.path.basename(pred_path).split('.')[0])
         total_values.loc[len(total_values)] = metrics_line
 
