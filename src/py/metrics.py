@@ -33,10 +33,16 @@ def compute_recall(tp, fn):
     return tp / (tp + fn)
 
 def compute_f1_score(precision, recall):
-    return (2*precision*recall) / (precision + recall)
+    try:
+        return (2*precision*recall) / (precision + recall)
+    except:
+        return 0
 
 def compute_fbeta_score(precision, recall, beta):
-    return ((1 + beta**2) * precision * recall) / (beta**2 * precision + recall)
+    try:
+        return ((1 + beta**2) * precision * recall) / (beta**2 * precision + recall)
+    except:
+        return 0
 
 def compute_accuracy(tp,tn,fp,fn):
     return (tp + tn)/(tp + tn + fp + fn)
@@ -81,7 +87,7 @@ def main(args):
     else: 
         Metrics_file = pd.ExcelFile(out)
         Folder_Metrics = pd.read_excel(Metrics_file, 'Sheet1', index_col=0, header=None)
-        Folder_Metrics = Folder_Metrics[Folder_Metrics.columns[:6]]
+        Folder_Metrics = Folder_Metrics[Folder_Metrics.columns[:8]]
         Folder_Metrics.columns = model_params
         Image_Metrics = pd.read_excel(Metrics_file, 'Sheet2', index_col=0, header=None)
         Image_Metrics.columns = model_params
@@ -165,7 +171,8 @@ def main(args):
         fbeta = compute_fbeta_score(precision, recall, 2)
         acc = compute_accuracy(tp, tn, fp, fn)
         auc = compute_auc(GT, pred)
-        auprc = compute_auprc(GT, pred)
+        # auprc = compute_auprc(GT, pred)
+        auprc = compute_average_precision(GT, pred)
 
         metrics_line = [auc,auprc,f1,fbeta,acc,recall,precision]
         metrics_line.append(os.path.basename(pred_path).split('.')[0])
