@@ -34,7 +34,7 @@ def main(args):
 
     print("Loading data...")
     input_paths = sorted([os.path.join(Inputdir, fname) for fname in os.listdir(Inputdir) if not fname.startswith(".")])
-    images = np.array([Array_2_5D(path, input_paths, width, height, label=False) for path in input_paths])
+    images = np.array([Array_2D(path, label=False) for path in input_paths])
 
     model = tf.keras.models.load_model(load_model)
 

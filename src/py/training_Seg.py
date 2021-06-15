@@ -8,13 +8,20 @@ from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 
 tf.config.run_functions_eagerly(True)
 
-from sklearn.utils import shuffle
-
 from models import *
 from utils import *
 
 
+def scheduler(epoch, lr):
+  if epoch < 20:
+    return lr
+  elif epoch < 50:
+    return lr * tf.math.exp(-0.1)
+  else:
+    return lr
+
 def remove_empty_slices(img, label):
+
     L = []
     for i in range(img.shape[0]):
         if np.count_nonzero(label[i]) == 0:
@@ -22,7 +29,7 @@ def remove_empty_slices(img, label):
             
     L = np.array(L)
     np.random.shuffle(L)
-    L = L[:int(0.66*L.shape[0])].tolist()
+    L = L[:int(0.5*L.shape[0])].tolist()
 
     print("Before:", img.shape, end='   After: ')
     img = np.delete(img, L, axis=0)
@@ -34,12 +41,19 @@ def remove_empty_slices(img, label):
 
 def main(args):
     InputDir = args.dir_train
-    val_folds = args.val_folds
 
-    InputdirTrain = [os.path.join(InputDir,fold,'Scans') for fold in os.listdir(InputDir) if fold not in val_folds and not fold.startswith(".")]
-    InputdirLabel = [os.path.join(InputDir,fold,'Segs') for fold in os.listdir(InputDir) if fold not in val_folds and not fold.startswith(".")]
-    InputdirValTrain = [os.path.join(InputDir,fold,'Scans') for fold in val_folds]
-    InputdirValLabel = [os.path.join(InputDir,fold,'Segs') for fold in val_folds]
+    if args.val_folds:
+        val_folds = args.val_folds
+        InputdirTrain = [os.path.join(InputDir,fold,'Scans') for fold in os.listdir(InputDir) if fold not in val_folds and not fold.startswith(".")]
+        InputdirLabel = [os.path.join(InputDir,fold,'Segs') for fold in os.listdir(InputDir) if fold not in val_folds and not fold.startswith(".")]
+        InputdirValTrain = [os.path.join(InputDir,fold,'Scans') for fold in val_folds]
+        InputdirValLabel = [os.path.join(InputDir,fold,'Segs') for fold in val_folds]
+    else:
+        val_dir = args.val_dir
+        InputdirTrain = [os.path.join(InputDir,'Scans')]
+        InputdirLabel = [os.path.join(InputDir,'Segs')]
+        InputdirValTrain = [os.path.join(val_dir,'Scans')]
+        InputdirValLabel = [os.path.join(val_dir,'Segs')]
 
     number_epochs = args.epochs
     save_frequence = args.save_frequence
@@ -77,32 +91,29 @@ def main(args):
 
     print("Pre-processing...")
     # Read and process the input files
-    x_train = np.array([Array_2_5D(path, input_paths, width, height,label=False) for path in input_paths])
-    y_train = np.array([Array_2_5D(path, label_paths, width, height,label=True) for path in label_paths])
-    x_val   = np.array([Array_2_5D(path, ValInput_paths, width, height,label=False) for path in ValInput_paths])
-    y_val   = np.array([Array_2_5D(path, ValLabel_paths, width, height,label=True) for path in ValLabel_paths])
-
+    x_train = np.array([Array_2D(path, label=False) for path in input_paths])
+    y_train = np.array([Array_2D(path, label=True) for path in label_paths])
+    
     x_train, y_train = remove_empty_slices(x_train, y_train)
-    x_train, y_train = shuffle(x_train, y_train)
-    x_val, y_val = shuffle(x_val, y_val)
-
+    
     x_train = np.reshape(x_train, x_train.shape+(1,))
     y_train = np.reshape(y_train, y_train.shape+(1,))
+    
+    dataset_training   = create_dataset(x_train, y_train, batch_size)
+    print("Dataset training created")
+    del(x_train)
+    del(y_train)
+    
+    x_val   = np.array([Array_2D(path,label=False) for path in ValInput_paths])
+    y_val   = np.array([Array_2D(path, label=True) for path in ValLabel_paths])
+    
     x_val   = np.reshape(x_val, x_val.shape+(1,))
     y_val   = np.reshape(y_val, y_val.shape+(1,))
-
-    print("Training...")
-    print("=====================================================================")
-    print()
-    print("Inputs shape:     ", np.shape(x_train), "min:", np.amin(x_train), "max:", np.amax(x_train), "unique:", len(np.unique(x_train)))
-    print("Labels shape:     ", np.shape(y_train), "min:", np.amin(y_train), "max:", np.amax(y_train), "unique:", len(np.unique(y_train)))
-    print("Val inputs shape: ", np.shape(x_val), "min:", np.amin(x_val), "max:", np.amax(x_val), "unique:", len(np.unique(x_val)))
-    print("Val labels shape: ", np.shape(y_val), "min:", np.amin(y_val), "max:", np.amax(y_val), "unique:", len(np.unique(y_val)))
-    print()
-    print("=====================================================================")
-
-    dataset_training   = create_dataset(x_train, y_train, batch_size)
+    
     dataset_validation = create_dataset(x_val, y_val, batch_size)
+    print("Dataset validation created")
+    del(x_val)
+    del(y_val)
 
     for images, labels in dataset_training.take(1):
         numpy_images = images.numpy()
@@ -122,8 +133,9 @@ def main(args):
     model_checkpoint = ModelCheckpoint(savedModel, monitor='loss',verbose=1, period=save_frequence)
     log_dir = os.path.join(logPath,args.model_name+"_"+datetime.datetime.now().strftime("%Y_%d_%m-%H:%M:%S"))
     tensorboard_callback = TensorBoard(log_dir=log_dir,histogram_freq=1)
-
-    callbacks_list = [model_checkpoint, tensorboard_callback]
+    
+    LR_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
+    callbacks_list = [model_checkpoint, tensorboard_callback, LR_callback]
 
     model.fit(
         dataset_training,
@@ -140,9 +152,12 @@ if __name__ ==  '__main__':
 
     training_path = parser.add_argument_group('Input files')
     training_path.add_argument('--dir_train', type=str, help='Input training folder', required=True)
-    training_path.add_argument('--val_folds', type=str, nargs="+", help='Fold of the cross-validation to keep for validation', required=True)
     training_path.add_argument('--save_model', type=str, help='Directory to save the model', required=True)
     training_path.add_argument('--log_dir', type=str, help='Directory for the logs of the model', required=True)
+
+    validation_files = parser.add_mutually_exclusive_group(required=True)
+    validation_files.add_argument('--val_folds', type=str, nargs="+", help='Fold of the cross-validation to keep for validation')
+    validation_files.add_argument('--val_dir', type=str, help='')
     
     training_parameters = parser.add_argument_group('training parameters')
     training_parameters.add_argument('--model_name', type=str, help='Name of the model', default='CBCT_seg_model')
