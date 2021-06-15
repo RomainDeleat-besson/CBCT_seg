@@ -4,6 +4,7 @@ import math
 import os
 import time
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from numba import jit, prange
@@ -52,10 +53,14 @@ def compute_auc(GT, pred):
 
 def compute_auprc(GT, pred):
     prec, rec, thresholds = metrics.precision_recall_curve(GT, pred)
-    return metrics.auc(prec, rec)
+    print(prec, rec, thresholds)
+    plt.plot(prec, rec)
+    plt.show()
+    # return metrics.auc(prec, rec)
 
 def compute_average_precision(GT, pred):
-    return metrics.average_precision_score(GT, pred)
+    ratio = sum(GT)/np.size(GT)
+    return metrics.average_precision_score(GT, pred), ratio
     
 
 def main(args):
@@ -78,7 +83,7 @@ def main(args):
     model_params = ['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', 'Empty col', 'Empty col2', 'Empty col3', 'CV']
     param_values = [number_epochs, batch_size, NumberFilters, lr, '', '', '', '']
     Params = pd.Series(param_values, index=model_params, name='Params values')
-    metrics_names = ['AUC','AUPRC','F1_Score','Fbeta_Score','Accuracy','Recall','Precision','CV fold']
+    metrics_names = ['AUPRC','AUPRC - Baseline','F1_Score','Fbeta_Score','Accuracy','Recall','Precision','CV fold']
     Metrics = pd.Series(metrics_names, index=model_params, name='Model\Metrics')
 
     if not os.path.exists(out): 
@@ -103,7 +108,7 @@ def main(args):
     if not matching_values.any():
         Image_Metrics = Image_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', '', '', 'File Name'], name='Params', index=model_params), ignore_index=False)
         Image_Metrics = Image_Metrics.append(pd.Series(param_values, index=model_params, name='Params values'), ignore_index=False)
-        Image_Metrics = Image_Metrics.append(pd.Series(['AUC','AUPRC','F1_Score','Fbeta_Score','Accuracy','Recall','Precision','File Name'], index=model_params, name='Model\Metrics'), ignore_index=False)
+        Image_Metrics = Image_Metrics.append(pd.Series(['AUPRC','AUPRC - Baseline','F1_Score','Fbeta_Score','Accuracy','Recall','Precision','File Name'], index=model_params, name='Model\Metrics'), ignore_index=False)
         Image_Metrics = Image_Metrics.append(pd.Series(name='', dtype='object'), ignore_index=False)
 
     arrays = [range(len(Folder_Metrics)), Folder_Metrics.index]
@@ -120,11 +125,14 @@ def main(args):
         img_obj = {}
         img_obj["img"] = args.pred_img
         img_obj["GT"] = args.groundtruth_img
+        if args.pred_raw_img:
+            img_obj['raw'] = args.pred_raw_img
         img_fn_array.append(img_obj)
 
     if args.pred_dir:
         normpath_img = os.path.normpath("/".join([args.pred_dir, '*', '']))
         normpath_GT = os.path.normpath("/".join([args.groundtruth_dir, '*', '']))
+        normpath_raw = os.path.normpath("/".join([args.pred_raw_dir, '*', '']))
 
         img_list = []
         for img_fn in glob.iglob(normpath_img, recursive=True):
@@ -135,12 +143,21 @@ def main(args):
             else: 
                 img_list.append(img_fn)
 
-        for (img_fn, GT_fn) in zip(sorted(img_list), sorted(glob.iglob(normpath_GT, recursive=True))):
-            if os.path.isfile(img_fn) and True in [ext in img_fn for ext in [".nrrd", ".nrrd.gz", ".nii", ".nii.gz", ".gipl", ".gipl.gz"]]:
-                img_obj = {}
-                img_obj["img"] = img_fn
-                img_obj["GT"] = GT_fn
-                img_fn_array.append(img_obj)
+        if args.pred_raw_dir:
+            for (img_fn, GT_fn, raw_fn) in zip(sorted(img_list), sorted(glob.iglob(normpath_GT, recursive=True)), sorted(glob.iglob(normpath_raw, recursive=True))):
+                if os.path.isfile(img_fn) and True in [ext in img_fn for ext in [".nrrd", ".nrrd.gz", ".nii", ".nii.gz", ".gipl", ".gipl.gz"]]:
+                    img_obj = {}
+                    img_obj["img"] = img_fn
+                    img_obj["GT"] = GT_fn
+                    img_obj["raw"] = raw_fn
+                    img_fn_array.append(img_obj)
+        else:
+            for (img_fn, GT_fn) in zip(sorted(img_list), sorted(glob.iglob(normpath_GT, recursive=True))):
+                if os.path.isfile(img_fn) and True in [ext in img_fn for ext in [".nrrd", ".nrrd.gz", ".nii", ".nii.gz", ".gipl", ".gipl.gz"]]:
+                    img_obj = {}
+                    img_obj["img"] = img_fn
+                    img_obj["GT"] = GT_fn
+                    img_fn_array.append(img_obj)
 
     total_values = pd.DataFrame(columns=model_params)
     
@@ -170,17 +187,26 @@ def main(args):
         f1 = compute_f1_score(precision, recall)
         fbeta = compute_fbeta_score(precision, recall, 2)
         acc = compute_accuracy(tp, tn, fp, fn)
-        auc = compute_auc(GT, pred)
-        # auprc = compute_auprc(GT, pred)
-        auprc = compute_average_precision(GT, pred)
 
-        metrics_line = [auc,auprc,f1,fbeta,acc,recall,precision]
+        if 'raw' in img_obj:
+            raw_path = img_obj["raw"]
+            raw, _ = ReadFile(raw_path, verbose=0)
+            raw = Normalize(raw,out_min=0,out_max=1)
+            raw = np.array(raw).flatten()
+            # auc = compute_auc(GT, raw)
+            # auprc = compute_auprc(GT, raw)
+            auprc, ratio = compute_average_precision(GT, raw)
+        else:
+            # auc = compute_auc(GT, pred)
+            # auprc = compute_auprc(GT, raw)
+            auprc, ratio = compute_average_precision(GT, pred)
+
+        metrics_line = [auprc,ratio,f1,fbeta,acc,recall,precision]
         metrics_line.append(os.path.basename(pred_path).split('.')[0])
         total_values.loc[len(total_values)] = metrics_line
 
         stopTime = time.time()
         print('Processing completed in {0:.2f} seconds'.format(stopTime-startTime))
-
 
     means = total_values[total_values.columns.drop('CV')].mean()
     stds = total_values[total_values.columns.drop('CV')].std()
@@ -243,6 +269,9 @@ if __name__ ==  '__main__':
     predicted_files = input_params.add_mutually_exclusive_group(required=True)
     predicted_files.add_argument('--pred_img', type=str, help='Input predicted reconstructed 3D image')
     predicted_files.add_argument('--pred_dir', type=str, help='Input directory with predicted reconstructed 3D images')
+    predicted_raw_files = input_params.add_mutually_exclusive_group()
+    predicted_raw_files.add_argument('--pred_raw_img', type=str, help='Input raw predicted reconstructed 3D image')
+    predicted_raw_files.add_argument('--pred_raw_dir', type=str, help='Input directory with raw predicted reconstructed 3D images')
 
     groundtruth_files = input_params.add_mutually_exclusive_group(required=True)
     groundtruth_files.add_argument('--groundtruth_img', type=str, help='Input original 3D images (ground truth)')

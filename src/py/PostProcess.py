@@ -174,8 +174,9 @@ def main(args):
 				outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
 				SaveFile(outfile, LabelMapToLabelImageFilter.GetOutput(), original_header)
 
-			# outfile = os.path.normpath('/'.join([out,filename+'_raw_'+tool_name+ext]))
-			# SaveFile(outfile, ConnectedComponentImageFilter.GetOutput(), original_header)
+			if args.raw:
+				outfile = os.path.normpath('/'.join([out,filename+'_raw_'+tool_name+ext]))
+				SaveFile(outfile, ConnectedComponentImageFilter.GetOutput(), original_header)
 
 		else: #MandSeg
 			labelStatisticsImageFilter = itk.LabelStatisticsImageFilter[ImageType, ImageType].New()
@@ -187,10 +188,10 @@ def main(args):
 
 			labelSize=[]
 			[labelSize.append(labelStatisticsImageFilter.GetCount(i)) for i in range(1,len(labelList))]
-			print(labelSize)
+			# print(labelSize)
 			Max = max(labelSize)
-			print("Max: ", Max)
-			print("Thresh: ", Max/20)
+			# print("Max: ", Max)
+			# print("Thresh: ", Max/20)
 
 			RelabelComponentImageFilter = itk.RelabelComponentImageFilter[ImageType, ImageType].New()
 			RelabelComponentImageFilter.SetInput(ConnectedComponentImageFilter)
@@ -249,10 +250,11 @@ def main(args):
 			outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
 			SaveFile(outfile, itk.GetArrayFromImage(filled_itk_img), original_header)
 
-			# if not os.path.exists(out+'_raw'):
-			# 	os.makedirs(out+'_raw')
-			# outfile = os.path.normpath('/'.join([out+'_raw',filename+'_raw_'+tool_name+ext]))
-			# SaveFile(outfile, itk.GetArrayFromImage(itk_img), original_header)
+			if args.raw:
+				if not os.path.exists(out+'_raw'):
+					os.makedirs(out+'_raw')
+				outfile = os.path.normpath('/'.join([out+'_raw',filename+'_raw_'+tool_name+ext]))
+				SaveFile(outfile, itk.GetArrayFromImage(itk_img), original_header)
 	
 
 
@@ -266,6 +268,7 @@ if __name__ ==  '__main__':
 	output_params = parser.add_argument_group('Output parameters')
 	output_params.add_argument('--tool', type=str, help='Name of the tool used', default='MandSeg')
 	output_params.add_argument('--out', type=str, help='Output directory', required=True)
+	output_params.add_argument('--raw', type=bool, help='Save raw files')
 
 	args = parser.parse_args()
 
