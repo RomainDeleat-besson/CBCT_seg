@@ -98,7 +98,7 @@ def main(args):
     x_train = np.array([ProcessDataset(path, label=False) for path in input_paths])
     y_train = np.array([ProcessDataset(path, label=True) for path in label_paths])
     
-    x_train, y_train = remove_empty_slices(x_train, y_train)
+    x_train, y_train = remove_empty_slices(x_train, y_train, ratio=args.ratio)
     x_train, y_train = shuffle(x_train, y_train)
     
     x_train = np.reshape(x_train, x_train.shape+(1,))
@@ -112,7 +112,7 @@ def main(args):
     x_val = np.array([ProcessDataset(path,label=False) for path in ValInput_paths])
     y_val = np.array([ProcessDataset(path, label=True) for path in ValLabel_paths])
 
-    x_val, y_val = remove_empty_slices(x_val, y_val)
+    # x_val, y_val = remove_empty_slices(x_val, y_val, ratio=args.ratio)
     x_val, y_val = shuffle(x_val, y_val)
 
     x_val = np.reshape(x_val, x_val.shape+(1,))
@@ -172,6 +172,7 @@ if __name__ ==  '__main__':
     training_parameters = parser.add_argument_group('training parameters')
     training_parameters.add_argument('--model_name', type=str, help='Name of the model', default='CBCT_seg_model')
     training_parameters.add_argument('--epochs', type=int, help='Number of epochs', default=20)
+    training_parameters.add_argument('--ratio', type=float, help='Ratio of slices outside of the region of interest to remove (between 0 and 1)', default=0)
     training_parameters.add_argument('--save_frequence', type=int, help='Epoch frequence to save the model', default=5)
     training_parameters.add_argument('--learning_rate_schedular', type=bool, help='Set the LRS', default=False)
     training_parameters.add_argument('--width', type=int, default=512)

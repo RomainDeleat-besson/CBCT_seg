@@ -185,7 +185,9 @@ do
             --log_dir $dir_log \
             --model_name $model_name"_"$cv_fold \
             --epochs $epochs\
+            --ratio 0.5 \
             --save_frequence $save_frequence \
+            --learning_rate_schedular True \
             --width $width \
             --height $height \
             --learning_rate $learning_rate \
@@ -211,10 +213,12 @@ do
             --dir $dir_predict \
             --original_dir $dir_gt/Scans \
             --tool $tool_name \
-            --out $dir_postproc
+            --out $dir_postproc \
+            --out_raw $dir_postproc"_raw"
 
     python3 $dir_src/src/py/metrics.py \
             --pred_dir $dir_postproc \
+            --pred_raw_dir $dir_postproc"_raw" \
             --groundtruth_dir $dir_gt/Segs \
             --out $out_metrics_val \
             --tool $tool_name \
@@ -242,10 +246,12 @@ do
             --dir $dir_predict \
             --original_dir $dir_test/Scans \
             --tool $tool_name \
-            --out $dir_postproc
+            --out $dir_postproc \
+            --out_raw $dir_postproc"_raw"
 
     python3 $dir_src/src/py/metrics.py \
             --pred_dir $dir_postproc \
+            --pred_raw_dir $dir_postproc"_raw" \
             --groundtruth_dir $dir_test/Segs \
             --out $out_metrics_testing \
             --tool $tool_name \
