@@ -137,6 +137,7 @@ testing_percentage="${testing_percentage:-15}"
 min_percentage="${min_percentage:-30}"
 max_percentage="${max_percentage:-90}"
 epochs="${epochs:-80}"
+ratio="${ratio:-0.5}"
 save_frequence="${save_frequence:-5}"
 width="${width:-320}"
 height="${height:-320}"
@@ -185,7 +186,7 @@ do
             --log_dir $dir_log \
             --model_name $model_name"_"$cv_fold \
             --epochs $epochs\
-            --ratio 0.5 \
+            --ratio $ratio \
             --save_frequence $save_frequence \
             --learning_rate_schedular True \
             --width $width \
