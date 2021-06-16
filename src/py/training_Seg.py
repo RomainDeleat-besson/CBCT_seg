@@ -14,7 +14,7 @@ from models import *
 from utils import *
 
 
-def remove_empty_slices(img, label):
+def remove_empty_slices(img, label, ratio=1.0):
     L = []
     for i in range(img.shape[0]):
         if np.count_nonzero(label[i]) == 0:
@@ -22,7 +22,7 @@ def remove_empty_slices(img, label):
             
     L = np.array(L)
     np.random.shuffle(L)
-    L = L[:int(0.66*L.shape[0])].tolist()
+    L = L[:int(ratio*L.shape[0])].tolist()
 
     print("Before:", img.shape, end='   After: ')
     img = np.delete(img, L, axis=0)
@@ -82,7 +82,7 @@ def main(args):
     x_val   = np.array([Array_2_5D(path, ValInput_paths, width, height,label=False) for path in ValInput_paths])
     y_val   = np.array([Array_2_5D(path, ValLabel_paths, width, height,label=True) for path in ValLabel_paths])
 
-    x_train, y_train = remove_empty_slices(x_train, y_train)
+    x_train, y_train = remove_empty_slices(x_train, y_train, ratio=1)
     x_train, y_train = shuffle(x_train, y_train)
     x_val, y_val = shuffle(x_val, y_val)
 
