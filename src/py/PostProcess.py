@@ -33,7 +33,7 @@ def main(args):
 		if '.gz' in original_img_path: ext=ext+'.gz'
 
 		img = Reconstruction(filename,dir,original_img)
-		thresh=int(round(threshold_otsu(img)/2))
+		thresh=int(round(threshold_otsu(img)))
 		print("Threshold: ", thresh)
 		img[img<thresh]=0
 		img[img>=thresh]=255
@@ -174,8 +174,9 @@ def main(args):
 				outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
 				SaveFile(outfile, LabelMapToLabelImageFilter.GetOutput(), original_header)
 
-			# outfile = os.path.normpath('/'.join([out,filename+'_raw_'+tool_name+ext]))
-			# SaveFile(outfile, ConnectedComponentImageFilter.GetOutput(), original_header)
+			if args.raw:
+				outfile = os.path.normpath('/'.join([out,filename+'_raw_'+tool_name+ext]))
+				SaveFile(outfile, ConnectedComponentImageFilter.GetOutput(), original_header)
 
 		else: #MandSeg
 			labelStatisticsImageFilter = itk.LabelStatisticsImageFilter[ImageType, ImageType].New()
@@ -183,25 +184,77 @@ def main(args):
 			labelStatisticsImageFilter.SetInput(itk_img)
 			labelStatisticsImageFilter.Update()
 			labelList = labelStatisticsImageFilter.GetValidLabelValues()
-			NbreOfLabel = len(labelList)
+			NumberOfLabel = len(labelList)
 
 			labelSize=[]
 			[labelSize.append(labelStatisticsImageFilter.GetCount(i)) for i in range(1,len(labelList))]
+			# print(labelSize)
 			Max = max(labelSize)
+			# print("Max: ", Max)
+			# print("Thresh: ", Max/20)
 
 			RelabelComponentImageFilter = itk.RelabelComponentImageFilter[ImageType, ImageType].New()
-			RelabelComponentImageFilter.SetInput(ConnectedComponentImageFilter.GetOutput())
-			RelabelComponentImageFilter.SetMinimumObjectSize(Max)
+			RelabelComponentImageFilter.SetInput(ConnectedComponentImageFilter)
+			RelabelComponentImageFilter.SetMinimumObjectSize(int(Max/20))
 			RelabelComponentImageFilter.Update()
 			relabeled_itk_img = RelabelComponentImageFilter.GetOutput()
 
-			outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
-			SaveFile(outfile, itk.GetArrayFromImage(relabeled_itk_img), original_header)
+			LabelType = itk.LabelMap[itk.StatisticsLabelObject[itk.UL,3]]
+			LabelImageToLabelMapFilter = itk.LabelImageToLabelMapFilter[ImageType, LabelType].New()
+			LabelImageToLabelMapFilter.SetInput(relabeled_itk_img)
+			LabelImageToLabelMapFilter.Update()
 
-			# if not os.path.exists(out+'_raw'):
-			# 	os.makedirs(out+'_raw')
-			# outfile = os.path.normpath('/'.join([out+'_raw',filename+'_raw_'+tool_name+ext]))
-			# SaveFile(outfile, itk.GetArrayFromImage(itk_img), original_header)
+			ChangeLabelLabelMapFilter = itk.ChangeLabelLabelMapFilter[LabelType].New()
+			ChangeLabelLabelMapFilter.SetInput(LabelImageToLabelMapFilter)
+			# NumberOfLabel = ChangeLabelLabelMapFilter.GetNumberOfIndexedOutputs()
+
+			ConnectedComponentImageFilter = itk.ConnectedComponentImageFilter[ImageType, ImageType].New()
+			ConnectedComponentImageFilter.SetInput(relabeled_itk_img)
+			ConnectedComponentImageFilter.Update()
+
+			labelStatisticsImageFilter = itk.LabelStatisticsImageFilter[ImageType, ImageType].New()
+			labelStatisticsImageFilter.SetLabelInput(ConnectedComponentImageFilter.GetOutput())
+			labelStatisticsImageFilter.SetInput(relabeled_itk_img)
+			labelStatisticsImageFilter.Update()
+			labelList = labelStatisticsImageFilter.GetValidLabelValues()
+			NumberOfLabel = len(labelList)
+
+			print("NumberOfLabel: ", NumberOfLabel)
+
+			for lbl in range(1, NumberOfLabel):
+				ChangeLabelLabelMapFilter.SetChange(lbl, 1)
+			ChangeLabelLabelMapFilter.Update()
+			
+			LabelMapToLabelImageFilter = itk.LabelMapToLabelImageFilter[LabelType, ImageType].New()
+			LabelMapToLabelImageFilter.SetInput(ChangeLabelLabelMapFilter)
+			LabelMapToLabelImageFilter.Update()
+			relabeled_itk_img = LabelMapToLabelImageFilter.GetOutput()
+
+
+			StructuringElementType = itk.FlatStructuringElement[3]
+			structuringElement = StructuringElementType.Ball(5)
+
+			BinaryMorphologicalClosingImageFilter = itk.BinaryMorphologicalClosingImageFilter[ImageType,ImageType,StructuringElementType].New()
+			BinaryMorphologicalClosingImageFilter.SetInput(relabeled_itk_img)
+			BinaryMorphologicalClosingImageFilter.SetKernel(structuringElement)
+			BinaryMorphologicalClosingImageFilter.SetForegroundValue(1)
+			BinaryMorphologicalClosingImageFilter.Update()
+			closed_itk_img = BinaryMorphologicalClosingImageFilter.GetOutput()
+
+			BinaryFillholeImageFilter = itk.BinaryFillholeImageFilter[ImageType].New()
+			BinaryFillholeImageFilter.SetInput(closed_itk_img)
+			BinaryFillholeImageFilter.SetForegroundValue(1)
+			BinaryFillholeImageFilter.Update()
+			filled_itk_img = BinaryFillholeImageFilter.GetOutput()
+
+			outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
+			SaveFile(outfile, itk.GetArrayFromImage(filled_itk_img), original_header)
+
+			if args.raw:
+				if not os.path.exists(out+'_raw'):
+					os.makedirs(out+'_raw')
+				outfile = os.path.normpath('/'.join([out+'_raw',filename+'_raw_'+tool_name+ext]))
+				SaveFile(outfile, itk.GetArrayFromImage(itk_img), original_header)
 	
 
 
@@ -215,6 +268,7 @@ if __name__ ==  '__main__':
 	output_params = parser.add_argument_group('Output parameters')
 	output_params.add_argument('--tool', type=str, help='Name of the tool used', default='MandSeg')
 	output_params.add_argument('--out', type=str, help='Output directory', required=True)
+	output_params.add_argument('--raw', type=bool, help='Save raw files')
 
 	args = parser.parse_args()
 

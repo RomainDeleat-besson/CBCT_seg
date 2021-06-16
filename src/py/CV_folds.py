@@ -12,19 +12,20 @@ def main(args):
     train_path = outdir+'/Training'
     test_path = outdir+'/Testing'
 
-    if args.testing_number: test_nbr = args.testing_number
-    else: test_perc = args.testing_percentage
-
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     if not os.path.exists(test_path):
         os.makedirs(test_path+'/Scans/')
         os.makedirs(test_path+'/Segs/')
-    for fold in range(args.cv_folds):
-        folds_normpath = os.path.normpath("/".join([train_path,str(fold+1)]))
-        if not os.path.exists(folds_normpath):
-            os.makedirs(folds_normpath+'/Scans/')
-            os.makedirs(folds_normpath+'/Segs/')
+    if args.cv_folds == 0:
+        os.makedirs(train_path+'/Scans/')
+        os.makedirs(train_path+'/Segs/')
+    else:
+        for fold in range(args.cv_folds):
+            folds_normpath = os.path.normpath("/".join([train_path,str(fold+1)]))
+            if not os.path.exists(folds_normpath):
+                os.makedirs(folds_normpath+'/Scans/')
+                os.makedirs(folds_normpath+'/Segs/')
 
     fold = 0
     dirs_normpath = os.path.normpath("/".join([args.dir, '*', '']))
@@ -63,17 +64,27 @@ def main(args):
             shutil.move(seg,out_seg)
             del scan_fn_array[nbr]
             del seg_fn_array[nbr]
-            
-        for (scan_obj,seg_obj) in zip(scan_fn_array,seg_fn_array):
-            fold_path = os.path.normpath("/".join([train_path,str(fold+1)]))
-            scan = scan_obj["img"]
-            seg = seg_obj["img"]
-            out_scan = fold_path+scan_obj["out"]
-            out_seg = fold_path+seg_obj["out"]
-            shutil.move(scan,out_scan)
-            shutil.move(seg,out_seg)
-            fold+=1
-            if fold == args.cv_folds: fold=0
+        
+        if args.cv_folds == 0:
+            for (scan_obj,seg_obj) in zip(scan_fn_array,seg_fn_array):
+                scan = scan_obj["img"]
+                seg = seg_obj["img"]
+                out_scan = train_path+scan_obj["out"]
+                out_seg = train_path+seg_obj["out"]
+                shutil.move(scan,out_scan)
+                shutil.move(seg,out_seg)
+
+        else:
+            for (scan_obj,seg_obj) in zip(scan_fn_array,seg_fn_array):
+                fold_path = os.path.normpath("/".join([train_path,str(fold+1)]))
+                scan = scan_obj["img"]
+                seg = seg_obj["img"]
+                out_scan = fold_path+scan_obj["out"]
+                out_seg = fold_path+seg_obj["out"]
+                shutil.move(scan,out_scan)
+                shutil.move(seg,out_seg)
+                fold+=1
+                if fold == args.cv_folds: fold=0
 
     shutil.rmtree(args.dir)
 

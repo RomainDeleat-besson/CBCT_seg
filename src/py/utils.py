@@ -144,7 +144,7 @@ def Deconstruction(img, filename, outdir, desired_width=512, desired_height=512)
 # Loading data
 # #####################################
 
-def Array_2_5D(file_path, paths, width, height, label):
+def ProcessDataset(file_path, label):
     if not label:
         File, _ = ReadFile(file_path, verbose=0)
         if np.amax(File)>0:
