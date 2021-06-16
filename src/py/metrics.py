@@ -53,7 +53,7 @@ def compute_auc(GT, pred):
 
 def compute_auprc(GT, pred):
     prec, rec, thresholds = metrics.precision_recall_curve(GT, pred)
-    print(prec, rec, thresholds)
+    # print(prec, rec, thresholds)
     plt.plot(prec, rec)
     plt.show()
     # return metrics.auc(prec, rec)
@@ -194,7 +194,7 @@ def main(args):
             raw = Normalize(raw,out_min=0,out_max=1)
             raw = np.array(raw).flatten()
             # auc = compute_auc(GT, raw)
-            # auprc = compute_auprc(GT, raw)
+            compute_auprc(GT, raw)
             auprc, ratio = compute_average_precision(GT, raw)
         else:
             # auc = compute_auc(GT, pred)

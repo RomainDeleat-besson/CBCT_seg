@@ -32,9 +32,15 @@ def main(args):
 		if '.nrrd' in original_img_path: ext='.nrrd'
 		if '.gz' in original_img_path: ext=ext+'.gz'
 
-		img = Reconstruction(filename,dir,original_img)
-		thresh=int(round(threshold_otsu(img)))
-		print("Threshold: ", thresh)
+		raw_img = Reconstruction(filename,dir,original_img)
+		img = raw_img.copy()
+
+		if args.threshold == -1:
+			thresh=int(round(threshold_otsu(img)))
+		else:
+			thresh=args.threshold
+		
+		print("Threshold:", thresh)
 		img[img<thresh]=0
 		img[img>=thresh]=255
 		img = img.astype(np.ushort)
@@ -174,9 +180,19 @@ def main(args):
 				outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
 				SaveFile(outfile, LabelMapToLabelImageFilter.GetOutput(), original_header)
 
-			if args.raw:
-				outfile = os.path.normpath('/'.join([out,filename+'_raw_'+tool_name+ext]))
-				SaveFile(outfile, ConnectedComponentImageFilter.GetOutput(), original_header)
+			if args.out_raw:
+				if distance_clusters > 40 and not (NumberCluster[0]<=6 or NumberCluster[1]<=6):
+					mean_jaws = int(abs((mean_cluster_0 + mean_cluster_1)/2))
+					if "lower" in filename:
+						raw_img[:,:,mean_jaws:] = 0
+
+					elif 'upper' in filename:
+						raw_img[:,:,:mean_jaws] = 0
+
+				if not os.path.exists(args.out_raw):
+					os.makedirs(args.out_raw)
+				outfile = os.path.normpath('/'.join([args.out_raw,filename+'_raw_'+tool_name+ext]))
+				SaveFile(outfile, raw_img, original_header)
 
 		else: #MandSeg
 			labelStatisticsImageFilter = itk.LabelStatisticsImageFilter[ImageType, ImageType].New()
@@ -250,11 +266,11 @@ def main(args):
 			outfile = os.path.normpath('/'.join([out,filename+'_'+tool_name+ext]))
 			SaveFile(outfile, itk.GetArrayFromImage(filled_itk_img), original_header)
 
-			if args.raw:
-				if not os.path.exists(out+'_raw'):
-					os.makedirs(out+'_raw')
-				outfile = os.path.normpath('/'.join([out+'_raw',filename+'_raw_'+tool_name+ext]))
-				SaveFile(outfile, itk.GetArrayFromImage(itk_img), original_header)
+			if args.out_raw:
+				if not os.path.exists(args.out_raw):
+					os.makedirs(args.out_raw)
+				outfile = os.path.normpath('/'.join([args.out_raw,filename+'_raw_'+tool_name+ext]))
+				SaveFile(outfile, raw_img, original_header)
 	
 
 
@@ -265,10 +281,13 @@ if __name__ ==  '__main__':
 	input_params.add_argument('--dir', type=str, help='Input directory with 2D images', required=True)
 	input_params.add_argument('--original_dir', type=str, help='Input directory with original 3D images', required=True)
 
+	param_parser = parser.add_argument_group('Parameters')
+	param_parser.add_argument('--tool', type=str, help='Name of the tool used', default='MandSeg')
+	param_parser.add_argument('--threshold', type=int, help='if -1, the thresold apply is otsu, else it is the value entered (between [0;255])', default=-1)
+
 	output_params = parser.add_argument_group('Output parameters')
-	output_params.add_argument('--tool', type=str, help='Name of the tool used', default='MandSeg')
 	output_params.add_argument('--out', type=str, help='Output directory', required=True)
-	output_params.add_argument('--raw', type=bool, help='Save raw files')
+	output_params.add_argument('--out_raw', type=str, help='Output directory for raw files')
 
 	args = parser.parse_args()
 

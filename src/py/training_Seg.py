@@ -4,6 +4,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
+from sklearn.utils import shuffle
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 
 tf.config.run_functions_eagerly(True)
@@ -98,22 +99,24 @@ def main(args):
     y_train = np.array([ProcessDataset(path, label=True) for path in label_paths])
     
     x_train, y_train = remove_empty_slices(x_train, y_train)
+    x_train, y_train = shuffle(x_train, y_train)
     
     x_train = np.reshape(x_train, x_train.shape+(1,))
     y_train = np.reshape(y_train, y_train.shape+(1,))
     
-    dataset_training   = create_dataset(x_train, y_train, batch_size)
+    dataset_training = create_dataset(x_train, y_train, batch_size)
     del(x_train)
     del(y_train)
 
     print("Processing validation dataset...")
-    x_val   = np.array([ProcessDataset(path,label=False) for path in ValInput_paths])
-    y_val   = np.array([ProcessDataset(path, label=True) for path in ValLabel_paths])
+    x_val = np.array([ProcessDataset(path,label=False) for path in ValInput_paths])
+    y_val = np.array([ProcessDataset(path, label=True) for path in ValLabel_paths])
 
     x_val, y_val = remove_empty_slices(x_val, y_val)
-    
-    x_val   = np.reshape(x_val, x_val.shape+(1,))
-    y_val   = np.reshape(y_val, y_val.shape+(1,))
+    x_val, y_val = shuffle(x_val, y_val)
+
+    x_val = np.reshape(x_val, x_val.shape+(1,))
+    y_val = np.reshape(y_val, y_val.shape+(1,))
     
     dataset_validation = create_dataset(x_val, y_val, batch_size)
     del(x_val)
