@@ -1,6 +1,7 @@
 # CBCT_seg
 
-Contributors: Celia Le, Romain Deleat-Besson, Loris Bert (NYU)
+Authors: Deleat-Besson Romain (UoM), Le Celia (UoM)
+Contributor: Bert Loris (NYU)
 
 Scripts for MandSeg and RootCanalSeg projects
 
@@ -26,37 +27,49 @@ CBCT_seg is a tool for CBCT segmentation based on a machine learning approach.
 
 The Convolutional Neural Network (CNN) used is a 2D U-Net.
 
-It takes several CBCT scans in input, with the extensions: .nii | nii.gz, .gipl | .gipl.gz, .nrrd
+It takes several CBCT scans as inputs, with the extensions: .nii | nii.gz, .gipl | .gipl.gz, .nrrd
 
 ## Running the code
+
+MandSeg and RCS algorithm have differents parameters therefore 4 bash scripts were created to run the training and prediction algorithms.
 
 **Prediction**
 
 To run the prediction algorithm, run the folowing command line:
+
 ```
-bash src/sh/main_prediction.sh --help
+bash src/sh/main_prediction_MandSeg.sh --help
+```
+```
+bash src/sh/main_prediction_RCS.sh --help
 ```
 
+```
+the input parameters are:
 
-> the input parameters are:
-> 
-> --dir_src                 Folder containing the scripts.
-> --dir_input               Folder containing the scans to segment.
-> --dir_output              Folder to save the postprocessed images
-> 
-> the optionnal parameters are:
-> 
-> --width                   Width of the images
-> --height                  Height of the images
-> --tool_name               Tool name [MandSeg | RCSeg]
-> -h|--help                 Print this Help.
+--dir_src                 Folder containing the scripts.
+--dir_input               Folder containing the scans to segment.
+--dir_output              Folder to save the postprocessed images
 
+the optionnal parameters are:
+
+--width                   Width of the images
+--height                  Height of the images
+--tool_name               Tool name [MandSeg | RCSeg]
+--threshold               Threshold to use to binarize scans in postprocess. (-1 for otsu | [0;255] for a specific value)
+-h|--help                 Print this Help.
+```
 
 **Training**
 
-To run the training algorithm, run the folowing command line (main_training_MandSeg.sh and main_training_RCSeg.sh have the same parameters but not the same values in the optionnal parameters):
+To run the training algorithm, run the folowing command line:
 
-- bash src/sh/main_training_MandSeg.sh PARAMETERS
+```
+bash src/sh/main_training_MandSeg.sh --help
+```
+```
+bash src/sh/main_training_RCS.sh --help
+```
 
 ```
 the input parameters are:
@@ -90,8 +103,10 @@ the optionnal parameters are:
 --batch_size              Batch size
 --NumberFilters           Number of filters
 --dropout                 Dropout
+--ratio                   Ration of slices outside of the region of interest to remove (value between [0;1])
 --num_epoch               Number of the epoch of the model to select for the prediction
 --tool_name               Name of the tool used
+--threshold               Threshold to use to binarize scans in postprocess. (-1 for otsu | [0;255] for a specific value)
 --out_metrics_val         File to save the evaluation metrics of the models on the validation set
 --out_metrics_testing     File to save the evaluation metrics of the models on the testing set
 -h|--help                 Print this Help.
@@ -103,21 +118,31 @@ the optionnal parameters are:
 
 You can get and run the MandSeg docker image by running the folowing command line:
 
-- docker pull dcbia/mandseg:latest
+```
+docker pull dcbia/mandseg:latest
+```
 
-- docker run --rm -v */my/input/folder*:/app/scans mandseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scan --path_model /app/model/*ModelName* --min_percentage 30 --max_percentage 90 --width 256 --height 256 --tool_name MandSeg
+```
+docker run --rm -v */my/input/folder*:/app/scans mandseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scan --path_model /app/model/*ModelName* --min_percentage 30 --max_percentage 90 --width 256 --height 256 --tool_name MandSeg
+```
 
-*RCSeg:*
+*RCS:*
 
-You can get and run the MandSeg docker image by running the folowing command line:
+You can get and run the RCS docker image by running the folowing command line:
 
-- docker pull dcbia/rcseg:latest
+```
+docker pull dcbia/rcseg:latest
+```
 
-- docker run --rm -v */my/input/folder*:/app/scans rcseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scan --path_model /app/model/*ModelName* --min_percentage 55 --max_percentage 90 --width 512 --height 512 --tool_name RCSeg
+```
+docker run --rm -v */my/input/folder*:/app/scans rcseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scan --path_model /app/model/*ModelName* --min_percentage 55 --max_percentage 90 --width 512 --height 512 --tool_name RCSeg
+```
 
 ### Creation of the folds for the cross validation
 
-- python3 src/py/CV_folds.py 
+```
+python3 src/py/generate_workspace.py --help
+```
 
 input: folder containing all the scans and segmentations
 
@@ -126,8 +151,9 @@ output: folder containing the scans and segmentations divided into training/test
 Takes a folder, searches into all the subfolders and seperates the scans and the segmentations. Moves thoses files into the output folder. A training folder and a testing folder are created (the training folder is devided into the specified number of folds). The percentage or number of files for testing is selected randomly inside each folder, according to the propotion of files in each of them, to prevent class imbalance.
 
 ```
-usage: CV_folds.py [-h] --dir DIR --out OUT [--cv_folds CV_FOLDS]
-                   [--testing_number TESTING_NUMBER | --testing_percentage TESTING_PERCENTAGE]
+usage: generate_workspace.py [-h] --dir DIR --out OUT [--cv_folds CV_FOLDS]
+                             [--testing_number TESTING_NUMBER | --testing_percentage TESTING_PERCENTAGE]
+                             [--validation_number VALIDATION_NUMBER | --validation_percentage VALIDATION_PERCENTAGE]
 
 Creation of the cross-validation folders
 
@@ -139,16 +165,23 @@ Input files:
 
 Output parameters:
   --out OUT             Output directory (default: None)
-  --cv_folds CV_FOLDS   Number of folds to create (default: 10)
+  --cv_folds CV_FOLDS   Number of folds to create (default: 0)
   --testing_number TESTING_NUMBER
-                        Number of scans to keep for testing (default: 1)
+                        Number of scans to keep for testing (default: None)
   --testing_percentage TESTING_PERCENTAGE
                         Percentage of scans to keep for testing (default: 20)
+  --validation_number VALIDATION_NUMBER
+                        Number of scans to keep for validation (default: None)
+  --validation_percentage VALIDATION_PERCENTAGE
+                        Percentage of scans to keep for validation (default:
+                        10)
 ```
 
 ### Pre-Processing
 
-- python3 src/py/PreProcess.py 
+```
+python3 src/py/preprocess.py --help
+```
 
 input: 3D CBCT scans (.nii | nii.gz, .gipl | .gipl.gz, .nrrd)
 
@@ -157,11 +190,11 @@ output: 2D .png slices from the scans
 Takes a single image or a directory, performs contrast adjustment and deconstructs the 3D scan into 2D slices
 
 ```
-usage: PreProcess.py [-h] (--image IMAGE | --dir DIR)
+usage: preprocess.py [-h] (--image IMAGE | --dir DIR)
                      [--desired_width DESIRED_WIDTH]
                      [--desired_height DESIRED_HEIGHT]
                      [--min_percentage MIN_PERCENTAGE]
-                     [--max_percentage MAX_PERCENTAGE] [--out OUT]
+                     [--max_percentage MAX_PERCENTAGE] --out OUT
 
 Pre-processing
 
@@ -184,7 +217,9 @@ Output parameters:
   --out OUT             Output directory (default: None)
 ```
 
-- python3 src/py/labels_preprocess.py 
+```
+python3 src/py/labels_preprocess.py --help
+```
 
 input: 3D CBCT labels (.nii | nii.gz, .gipl | .gipl.gz, .nrrd)
 
@@ -195,7 +230,7 @@ Takes a single label or a directory and deconstructs the 3D scan into 2D slices
 ```
 usage: labels_preprocess.py [-h] (--image IMAGE | --dir DIR)
                             [--desired_width DESIRED_WIDTH]
-                            [--desired_height DESIRED_HEIGHT] [--out OUT]
+                            [--desired_height DESIRED_HEIGHT] --out OUT
 
 Label pre-processing
 
@@ -220,7 +255,9 @@ Output parameters:
 
 The data augmentation used in the training applies random rotation, shift, shear and zoom.
 
-- python3 src/py/heat_map.py 
+```
+python3 src/py/heat_map.py --help
+```
 
 input: Database that contains the labels
 
@@ -230,7 +267,7 @@ Visualisation of the data augmentation that is applied on your dataset
 
 ```
 usage: heat_map.py [-h] --dir_database DIR_DATABASE [--width WIDTH]
-                   [--height HEIGHT] [--out OUT]
+                   [--height HEIGHT] --out OUT
 
 Visualization of the data augmentation
 
@@ -253,7 +290,9 @@ Output parameters:
 
 The neural network choosen is a U-Net architecture. The loss function is the *BinaryCrossentropy*. The metrics monitered during the training were the *Recall, Precision and AUC* metrics. 
 
-- python3 src/py/training_Seg.py 
+```
+python3 src/py/training_seg.py --help
+```
 
 input: The scans and labels for the training
 
@@ -262,11 +301,14 @@ output: The model
 The algorithm takes as an input the training fold. It will use one of the cross validation folder as a validation set and the rest as a training set. The *save_frequence* parameter allow you to save the model at specific epochs. 
 
 ```
-usage: training_Seg.py [-h] --dir_train DIR_TRAIN --val_folds VAL_FOLDS
-                       [VAL_FOLDS ...] --save_model SAVE_MODEL --log_dir
-                       LOG_DIR [--model_name MODEL_NAME] [--epochs EPOCHS]
-                       [--save_frequence SAVE_FREQUENCE] [--width WIDTH]
-                       [--height HEIGHT] [--batch_size BATCH_SIZE]
+usage: training_seg.py [-h] --dir_train DIR_TRAIN --save_model SAVE_MODEL
+                       --log_dir LOG_DIR
+                       (--val_folds VAL_FOLDS [VAL_FOLDS ...] | --val_dir VAL_DIR)
+                       [--model_name MODEL_NAME] [--epochs EPOCHS]
+                       [--ratio RATIO] [--save_frequence SAVE_FREQUENCE]
+                       [--learning_rate_schedular LEARNING_RATE_SCHEDULAR]
+                       [--width WIDTH] [--height HEIGHT]
+                       [--batch_size BATCH_SIZE]
                        [--learning_rate LEARNING_RATE]
                        [--number_filters NUMBER_FILTERS] [--dropout DROPOUT]
 
@@ -274,13 +316,14 @@ Training a neural network
 
 optional arguments:
   -h, --help            show this help message and exit
+  --val_folds VAL_FOLDS [VAL_FOLDS ...]
+                        Fold of the cross-validation to keep for validation
+                        (default: None)
+  --val_dir VAL_DIR
 
 Input files:
   --dir_train DIR_TRAIN
                         Input training folder (default: None)
-  --val_folds VAL_FOLDS [VAL_FOLDS ...]
-                        Fold of the cross-validation to keep for validation
-                        (default: None)
   --save_model SAVE_MODEL
                         Directory to save the model (default: None)
   --log_dir LOG_DIR     Directory for the logs of the model (default: None)
@@ -289,8 +332,12 @@ training parameters:
   --model_name MODEL_NAME
                         Name of the model (default: CBCT_seg_model)
   --epochs EPOCHS       Number of epochs (default: 20)
+  --ratio RATIO         Ratio of slices outside of the region of interest to
+                        remove (between 0 and 1) (default: 0)
   --save_frequence SAVE_FREQUENCE
                         Epoch frequence to save the model (default: 5)
+  --learning_rate_schedular LEARNING_RATE_SCHEDULAR
+                        Set the LRS (default: None)
   --width WIDTH
   --height HEIGHT
   --batch_size BATCH_SIZE
@@ -304,7 +351,9 @@ training parameters:
 
 ### Prediction
 
-- python3 src/py/predict_Seg.py 
+```
+python3 src/py/predict_seg.py --help
+```
 
 input: 2D slices form CBCT scans
 
@@ -313,7 +362,7 @@ output: 2D slices predicted by the model
 Takes 2D slices as an input from a CBCT scan and output the label predicted for each slices.
 
 ```
-usage: predict_Seg.py [-h] --dir_predict DIR_PREDICT [--width WIDTH]
+usage: predict_seg.py [-h] --dir_predict DIR_PREDICT [--width WIDTH]
                       [--height HEIGHT] --load_model LOAD_MODEL --out OUT
 
 Prediction
@@ -337,7 +386,9 @@ Output parameters:
 
 ### Post-Processing
 
-- python3 src/py/PostProcess.py 
+```
+python3 src/py/postprocess.py --help
+```
 
 input: directory with .png slices
 
@@ -347,8 +398,8 @@ Takes an input directory containing .png slices and reconstructs the 3D image. S
 Post-processing will be added to this function.
 
 ```
-usage: PostProcess.py [-h] --dir DIR --original_dir ORIGINAL_DIR [--tool TOOL]
-                      --out OUT
+usage: postprocess.py [-h] --dir DIR --original_dir ORIGINAL_DIR [--tool TOOL]
+                      [--threshold THRESHOLD] --out OUT [--out_raw OUT_RAW]
 
 Post-processing
 
@@ -361,14 +412,22 @@ Input files:
                         Input directory with original 3D images (default:
                         None)
 
+Parameters:
+  --tool TOOL           Name of the tool used (default: MandSeg)
+  --threshold THRESHOLD
+                        if -1, the thresold apply is otsu, else it is the
+                        value entered (between [0;255]) (default: -1)
+
 Output parameters:
-  --tool TOOL           Name of the tool used (default: RCSeg)
   --out OUT             Output directory (default: None)
+  --out_raw OUT_RAW     Output directory for raw files (default: None)
 ```
 
 ### Evaluation of the trained models
 
-- python3 src/py/metrics.py 
+```
+python3 src/py/metrics.py --help
+```
 
 input: either a 3D file and its ground truth, or a directory of 3D files and their ground truths.
 
@@ -379,6 +438,7 @@ If the output excel file already exist, it adds the results into a new line.
 
 ```
 usage: metrics.py [-h] (--pred_img PRED_IMG | --pred_dir PRED_DIR)
+                  [--pred_raw_img PRED_RAW_IMG | --pred_raw_dir PRED_RAW_DIR]
                   (--groundtruth_img GROUNDTRUTH_IMG | --groundtruth_dir GROUNDTRUTH_DIR)
                   --out OUT [--tool TOOL] [--model_name MODEL_NAME]
                   [--epochs EPOCHS] [--batch_size BATCH_SIZE]
@@ -394,6 +454,12 @@ Input files:
   --pred_img PRED_IMG   Input predicted reconstructed 3D image (default: None)
   --pred_dir PRED_DIR   Input directory with predicted reconstructed 3D images
                         (default: None)
+  --pred_raw_img PRED_RAW_IMG
+                        Input raw predicted reconstructed 3D image (default:
+                        None)
+  --pred_raw_dir PRED_RAW_DIR
+                        Input directory with raw predicted reconstructed 3D
+                        images (default: None)
   --groundtruth_img GROUNDTRUTH_IMG
                         Input original 3D images (ground truth) (default:
                         None)
