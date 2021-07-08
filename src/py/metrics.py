@@ -96,15 +96,15 @@ def main(args):
         Folder_Metrics.columns = model_params
         Image_Metrics = pd.read_excel(Metrics_file, 'Sheet2', index_col=0, header=None)
         Image_Metrics.columns = model_params
-
-    matching_values = (Folder_Metrics.values[:,:-2] == Params.values[:-2]).all(1)
+    
+    matching_values = (Folder_Metrics.values[:,:4] == Params.values[:4]).all(1)
     if not matching_values.any():
         Folder_Metrics = Folder_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', '', '', 'CV'], name='Params', index=model_params), ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(Params, ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(Metrics, ignore_index=False)
         Folder_Metrics = Folder_Metrics.append(pd.Series(name='', dtype='object'), ignore_index=False)
 
-    matching_values = (Image_Metrics.values[:,:-2] == Params.values[:-2]).all(1)
+    matching_values = (Image_Metrics.values[:,:4] == Params.values[:4]).all(1)
     if not matching_values.any():
         Image_Metrics = Image_Metrics.append(pd.Series(['Number Epochs', 'Batch Size', 'Number Filters', 'Learning Rate', '', '', '', 'File Name'], name='Params', index=model_params), ignore_index=False)
         Image_Metrics = Image_Metrics.append(pd.Series(param_values, index=model_params, name='Params values'), ignore_index=False)
@@ -117,8 +117,8 @@ def main(args):
     arrays = [range(len(Image_Metrics)), Image_Metrics.index]
     Index = pd.MultiIndex.from_arrays(arrays, names=('number', 'name'))
     Image_Metrics.set_index(Index, inplace=True)
-    idx1 = Folder_Metrics[(Folder_Metrics.values[:,:-2] == Params.values[:-2]).all(1)].index.get_level_values('number').tolist()[0]
-    idx2 = Image_Metrics[(Image_Metrics.values[:,:-2] == Params.values[:-2]).all(1)].index.get_level_values('number').tolist()[0]
+    idx1 = Folder_Metrics[(Folder_Metrics.values[:,:4] == Params.values[:4]).all(1)].index.get_level_values('number').tolist()[0]
+    idx2 = Image_Metrics[(Image_Metrics.values[:,:4] == Params.values[:4]).all(1)].index.get_level_values('number').tolist()[0]
     img_fn_array = []
 
     if args.pred_img:
@@ -132,7 +132,8 @@ def main(args):
     if args.pred_dir:
         normpath_img = os.path.normpath("/".join([args.pred_dir, '*', '']))
         normpath_GT = os.path.normpath("/".join([args.groundtruth_dir, '*', '']))
-        normpath_raw = os.path.normpath("/".join([args.pred_raw_dir, '*', '']))
+        if args.pred_raw_dir:
+            normpath_raw = os.path.normpath("/".join([args.pred_raw_dir, '*', '']))
 
         img_list = []
         for img_fn in glob.iglob(normpath_img, recursive=True):
@@ -286,8 +287,8 @@ if __name__ ==  '__main__':
     training_parameters.add_argument('--model_name', type=str, help='name of the model', default='CBCT_seg_model')
     training_parameters.add_argument('--epochs', type=int, help='name of the model', default=20)
     training_parameters.add_argument('--batch_size', type=int, help='batch_size value', default=16)
-    training_parameters.add_argument('--learning_rate', type=float, help='', default=0.00001)
-    training_parameters.add_argument('--number_filters', type=int, help='', default=16)
+    training_parameters.add_argument('--learning_rate', type=float, help='Learning rate', default=0.00001)
+    training_parameters.add_argument('--number_filters', type=int, help='Number of filters', default=16)
     training_parameters.add_argument('--cv_fold', type=int, help='number of the cross-validation fold', default=1)
 
     args = parser.parse_args()
