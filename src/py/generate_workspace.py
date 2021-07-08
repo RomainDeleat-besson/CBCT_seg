@@ -111,7 +111,7 @@ def main(args):
 
 
 if __name__ ==  '__main__':
-    parser = argparse.ArgumentParser(description='Creation of the cross-validation folders', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description='Creation of the workspace (training, validation, testing | cross validation)', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     input_params = parser.add_argument_group('Input files')
     input_params.add_argument('--dir', type=str, help='Input directory with 3D images', required=True)

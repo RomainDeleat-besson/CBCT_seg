@@ -55,12 +55,12 @@ if __name__ ==  '__main__':
 	input_params.add_argument('--dir', type=str, help='Input directory with 3D images')
 
 	size_group = parser.add_argument_group('Resizing parameters')
-	size_group.add_argument('--desired_width', type=int, default=512)
-	size_group.add_argument('--desired_height', type=int, default=512)
+	size_group.add_argument('--desired_width', type=int, help="desired width of the images", default=512)
+	size_group.add_argument('--desired_height', type=int, help="desired width of the images", default=512)
 
 	contrast_group = parser.add_argument_group('Contrast parameters')
-	contrast_group.add_argument('--min_percentage', type=int, default=45)
-	contrast_group.add_argument('--max_percentage', type=int, default=90)
+	contrast_group.add_argument('--min_percentage', type=int, help="min percentage to adjust contrast of the images", default=45)
+	contrast_group.add_argument('--max_percentage', type=int, help="max percentage to adjust contrast of the images", default=90)
 
 	output_params = parser.add_argument_group('Output parameters')
 	output_params.add_argument('--out', type=str, help='Output directory', required=True)

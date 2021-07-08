@@ -1,6 +1,7 @@
 # CBCT_seg
 
 Authors: Deleat-Besson Romain (UoM), Le Celia (UoM)
+
 Contributor: Bert Loris (NYU)
 
 Scripts for MandSeg and RootCanalSeg projects
@@ -31,7 +32,7 @@ It takes several CBCT scans as inputs, with the extensions: .nii | nii.gz, .gipl
 
 ## Running the code
 
-MandSeg and RCS algorithm have differents parameters therefore 4 bash scripts were created to run the training and prediction algorithms.
+MandSeg and RCS algorithms have different parameters therefore 4 bash scripts were created to run the training and prediction algorithms.
 
 **Prediction**
 
@@ -112,7 +113,7 @@ the optionnal parameters are:
 -h|--help                 Print this Help.
 ```
 
-**Docker**
+### Docker
 
 *MandSeg:*
 

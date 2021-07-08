@@ -53,8 +53,8 @@ if __name__ ==  '__main__':
     input_path.add_argument('--dir_database', type=str, help='Input dir of the labels', required=True)
 
     param = parser.add_argument_group('label parameters')
-    param.add_argument('--width', type=int, default=512)
-    param.add_argument('--height', type=int, default=512)
+    param.add_argument('--width', type=int, default=512, help="width of the images")
+    param.add_argument('--height', type=int, default=512, help="height of the images")
 
     output_params = parser.add_argument_group('Output parameters')
     output_params.add_argument('--out', type=str, help='Output file', required=True)

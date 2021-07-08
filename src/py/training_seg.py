@@ -167,7 +167,7 @@ if __name__ ==  '__main__':
 
     validation_files = parser.add_mutually_exclusive_group(required=True)
     validation_files.add_argument('--val_folds', type=str, nargs="+", help='Fold of the cross-validation to keep for validation')
-    validation_files.add_argument('--val_dir', type=str, help='')
+    validation_files.add_argument('--val_dir', type=str, help='Directory for the validation dataset')
     
     training_parameters = parser.add_argument_group('training parameters')
     training_parameters.add_argument('--model_name', type=str, help='Name of the model', default='CBCT_seg_model')
@@ -175,8 +175,8 @@ if __name__ ==  '__main__':
     training_parameters.add_argument('--ratio', type=float, help='Ratio of slices outside of the region of interest to remove (between 0 and 1)', default=0)
     training_parameters.add_argument('--save_frequence', type=int, help='Epoch frequence to save the model', default=5)
     training_parameters.add_argument('--learning_rate_schedular', type=bool, help='Set the LRS')
-    training_parameters.add_argument('--width', type=int, default=512)
-    training_parameters.add_argument('--height', type=int, default=512)
+    training_parameters.add_argument('--width', type=int, help="width of the images", default=512)
+    training_parameters.add_argument('--height', type=int, help="height of the images", default=512)
     training_parameters.add_argument('--batch_size', type=int, help='Batch size value', default=32)
     training_parameters.add_argument('--learning_rate', type=float, help='Learning rate', default=0.0001)
     training_parameters.add_argument('--number_filters', type=int, help='Number of filters', default=32)

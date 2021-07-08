@@ -59,8 +59,8 @@ if __name__ ==  '__main__':
     prediction_path.add_argument('--dir_predict', type=str, help='Input dir to be predicted', required=True)
     
     predict_parameters = parser.add_argument_group('Predict parameters')
-    predict_parameters.add_argument('--width', type=int, default=512)
-    predict_parameters.add_argument('--height', type=int, default=512)
+    predict_parameters.add_argument('--width', type=int, default=512, help="width of the images")
+    predict_parameters.add_argument('--height', type=int, default=512, help="height of the images")
     predict_parameters.add_argument('--load_model', type=str, help='Path of the trained model', required=True)  
 
     ouput = parser.add_argument_group('Output parameters')
