@@ -237,7 +237,7 @@ do
     dir_predict=$(echo $dir | sed -e "s|${dir_test_preproc}|${dir_test_predict}|g")
     dir_postproc=$(echo $dir | sed -e "s|${dir_test_preproc}|${dir_test_postproc}|g")
     python3 $dir_src/src/py/predict_Seg.py \
-            --dir_predict $dir/Scans \
+            --dir_predict $(dirname ${dir})/Scans \
             --load_model $dir_model/$model_name"_"$(basename ${dir})"_"$num_epoch.hdf5 \
             --width $width \
             --height $height \
@@ -247,6 +247,7 @@ do
             --dir $dir_predict \
             --original_dir $dir_test/Scans \
             --tool $tool_name \
+            --threshold -1 \
             --out $dir_postproc \
             --out_raw $dir_postproc"_raw"
 
