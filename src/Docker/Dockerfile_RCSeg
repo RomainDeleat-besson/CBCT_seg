@@ -16,4 +16,4 @@ RUN pip3 install -r /app/src/requirements.txt
 
 RUN mkdir /app/model
 WORKDIR /app/model
-RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v3.0.0/RCSeg_model_UNet_Final_50.hdf5
+RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v3.0.0/RCSeg_model_Unet_Final_50.hdf5
