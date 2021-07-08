@@ -281,7 +281,7 @@ def main(args):
 
 
 if __name__ ==  '__main__':
-    parser = argparse.ArgumentParser(description='optimal threshold', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description='Optimal threshold', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     input_params = parser.add_argument_group('Input files')
     input_params.add_argument('--dir', type=str, help='Input directory with 2D images', required=True)

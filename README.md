@@ -156,7 +156,7 @@ usage: generate_workspace.py [-h] --dir DIR --out OUT [--cv_folds CV_FOLDS]
                              [--testing_number TESTING_NUMBER | --testing_percentage TESTING_PERCENTAGE]
                              [--validation_number VALIDATION_NUMBER | --validation_percentage VALIDATION_PERCENTAGE]
 
-Creation of the cross-validation folders
+Creation of the workspace (training, validation, testing | cross validation)
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -166,7 +166,7 @@ Input files:
 
 Output parameters:
   --out OUT             Output directory (default: None)
-  --cv_folds CV_FOLDS   Number of folds to create (default: 0)
+  --cv_folds CV_FOLDS   Number of folds to create (default: 8)
   --testing_number TESTING_NUMBER
                         Number of scans to keep for testing (default: None)
   --testing_percentage TESTING_PERCENTAGE
@@ -208,11 +208,17 @@ Input files:
 
 Resizing parameters:
   --desired_width DESIRED_WIDTH
+                        desired width of the images (default: 512)
   --desired_height DESIRED_HEIGHT
+                        desired width of the images (default: 512)
 
 Contrast parameters:
   --min_percentage MIN_PERCENTAGE
+                        min percentage to adjust contrast of the images
+                        (default: 45)
   --max_percentage MAX_PERCENTAGE
+                        max percentage to adjust contrast of the images
+                        (default: 90)
 
 Output parameters:
   --out OUT             Output directory (default: None)
@@ -244,7 +250,9 @@ Input files:
 
 Resizing parameters:
   --desired_width DESIRED_WIDTH
+                        width of the images (default: 512)
   --desired_height DESIRED_HEIGHT
+                        height of the images (default: 512)
 
 Output parameters:
   --out OUT             Output directory of the label slices (default: None)
@@ -277,11 +285,11 @@ optional arguments:
 
 Input files:
   --dir_database DIR_DATABASE
-                        Input dir of the labels (default: None)
+                        Input dir of the dataset (default: None)
 
 label parameters:
-  --width WIDTH
-  --height HEIGHT
+  --width WIDTH         width of the images (default: 512)
+  --height HEIGHT       height of the images (default: 512)
 
 Output parameters:
   --out OUT             Output file (default: None)
@@ -320,7 +328,7 @@ optional arguments:
   --val_folds VAL_FOLDS [VAL_FOLDS ...]
                         Fold of the cross-validation to keep for validation
                         (default: None)
-  --val_dir VAL_DIR
+  --val_dir VAL_DIR     Directory for the validation dataset (default: None)
 
 Input files:
   --dir_train DIR_TRAIN
@@ -332,15 +340,15 @@ Input files:
 training parameters:
   --model_name MODEL_NAME
                         Name of the model (default: CBCT_seg_model)
-  --epochs EPOCHS       Number of epochs (default: 20)
+  --epochs EPOCHS       Number of epochs (default: 100)
   --ratio RATIO         Ratio of slices outside of the region of interest to
                         remove (between 0 and 1) (default: 0)
   --save_frequence SAVE_FREQUENCE
                         Epoch frequence to save the model (default: 5)
   --learning_rate_schedular LEARNING_RATE_SCHEDULAR
                         Set the LRS (default: None)
-  --width WIDTH
-  --height HEIGHT
+  --width WIDTH         width of the images (default: 512)
+  --height HEIGHT       height of the images (default: 512)
   --batch_size BATCH_SIZE
                         Batch size value (default: 32)
   --learning_rate LEARNING_RATE
@@ -376,8 +384,8 @@ Input files:
                         Input dir to be predicted (default: None)
 
 Predict parameters:
-  --width WIDTH
-  --height HEIGHT
+  --width WIDTH         width of the images (default: 512)
+  --height HEIGHT       height of the images (default: 512)
   --load_model LOAD_MODEL
                         Path of the trained model (default: None)
 
@@ -479,7 +487,9 @@ Training parameters:
   --batch_size BATCH_SIZE
                         batch_size value (default: 16)
   --learning_rate LEARNING_RATE
+                        Learning rate (default: 1e-05)
   --number_filters NUMBER_FILTERS
+                        Number of filters (default: 16)
   --cv_fold CV_FOLD     number of the cross-validation fold (default: 1)
 ```
 

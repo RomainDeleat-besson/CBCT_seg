@@ -118,7 +118,7 @@ if __name__ ==  '__main__':
 
     output_params = parser.add_argument_group('Output parameters')
     output_params.add_argument('--out', type=str, help='Output directory', required=True)
-    output_params.add_argument('--cv_folds', type=int, help='Number of folds to create', default=0)
+    output_params.add_argument('--cv_folds', type=int, help='Number of folds to create', default=8)
     
     testing_params = output_params.add_mutually_exclusive_group()
     testing_params.add_argument('--testing_number', type=int, help='Number of scans to keep for testing')

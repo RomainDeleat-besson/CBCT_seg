@@ -171,7 +171,7 @@ if __name__ ==  '__main__':
     
     training_parameters = parser.add_argument_group('training parameters')
     training_parameters.add_argument('--model_name', type=str, help='Name of the model', default='CBCT_seg_model')
-    training_parameters.add_argument('--epochs', type=int, help='Number of epochs', default=20)
+    training_parameters.add_argument('--epochs', type=int, help='Number of epochs', default=100)
     training_parameters.add_argument('--ratio', type=float, help='Ratio of slices outside of the region of interest to remove (between 0 and 1)', default=0)
     training_parameters.add_argument('--save_frequence', type=int, help='Epoch frequence to save the model', default=5)
     training_parameters.add_argument('--learning_rate_schedular', type=bool, help='Set the LRS')
