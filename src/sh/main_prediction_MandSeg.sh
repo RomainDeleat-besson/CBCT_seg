@@ -13,6 +13,7 @@ echo "--dir_output              Folder to save the postprocessed images"
 echo "--width                   Width of the images"
 echo "--height                  Height of the images"
 echo "--tool_name               Tool name [MandSeg | RCSeg]"
+echo "--threshold               Threshold to use to binarize scans in postprocess. (-1 for otsu | [0;255] for a specific value)"
 echo "-h|--help                 Print this Help."
 echo
 }
@@ -37,6 +38,8 @@ while [ "$1" != "" ]; do
             height=$1;;
         --tool_name )  shift
             tool_name=$1;;
+        --threshold )  shift
+            threshold=$1;;
         -h | --help )
             Help
             exit;;
@@ -54,29 +57,31 @@ dir_output="${dir_output:-$dir_input}"
 
 min_percentage="${min_percentage:-30}"
 max_percentage="${max_percentage:-90}"
-width="${width:-512}"
-height="${height:-512}"
+width="${width:-256}"
+height="${height:-256}"
 tool_name="${tool_name:-MandSeg}"
+threshold="${threshold:--1}"
 
 
-python3 $dir_src/py/PreProcess.py \
+python3 $dir_src/py/preprocess.py \
     --dir $dir_input \
     --desired_width $width \
     --desired_height $height \
     --min_percentage $min_percentage \
     --max_percentage $max_percentage \
-    --out "$dir_input"_PreProcessed
+    --out "$dir_input"_preprocessed \
 
-python3 $dir_src/py/predict_Seg.py \
-    --dir_predict "$dir_input"_PreProcessed \
+python3 $dir_src/py/predict_seg.py \
+    --dir_predict "$dir_input"_preprocessed \
     --load_model $path_model \
     --width $width \
     --height $height \
-    --out "$dir_input"_Predicted
+    --out "$dir_input"_predicted \
 
-python3 $dir_src/py/PostProcess.py \
-    --dir "$dir_input"_Predicted \
+python3 $dir_src/py/postprocess.py \
+    --dir "$dir_input"_predicted \
     --original_dir $dir_input \
     --tool $tool_name \
-    --out $dir_output
+    --threshold $threshold \
+    --out $dir_output \
 
