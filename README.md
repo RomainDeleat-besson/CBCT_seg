@@ -32,7 +32,7 @@ It takes several CBCT scans as inputs, with the extensions: .nii | nii.gz, .gipl
 
 ## Running the code
 
-MandSeg and RCS algorithms have different parameters therefore 4 bash scripts were created to run the training and prediction algorithms.
+MandSeg and RCSeg algorithms have different parameters therefore 4 bash scripts were created to run the training and prediction algorithms.
 
 **Prediction**
 
@@ -42,7 +42,7 @@ To run the prediction algorithm, run the folowing command line:
 bash src/sh/main_prediction_MandSeg.sh --help
 ```
 ```
-bash src/sh/main_prediction_RCS.sh --help
+bash src/sh/main_prediction_RCSeg.sh --help
 ```
 
 ```
@@ -69,7 +69,7 @@ To run the training algorithm, run the folowing command line:
 bash src/sh/main_training_MandSeg.sh --help
 ```
 ```
-bash src/sh/main_training_RCS.sh --help
+bash src/sh/main_training_RCSeg.sh --help
 ```
 
 ```
@@ -127,9 +127,9 @@ docker pull dcbia/mandseg:latest
 docker run --rm -v */my/input/folder*:/app/scans mandseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scan --path_model /app/model/*ModelName* --min_percentage 30 --max_percentage 90 --width 256 --height 256 --tool_name MandSeg
 ```
 
-*RCS:*
+*RCSeg:*
 
-You can get and run the RCS docker image by running the folowing command line:
+You can get and run the RCSeg docker image by running the folowing command line:
 
 ```
 docker pull dcbia/rcseg:latest
@@ -139,7 +139,7 @@ docker pull dcbia/rcseg:latest
 docker run --rm -v */my/input/folder*:/app/scans rcseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scan --path_model /app/model/*ModelName* --min_percentage 55 --max_percentage 90 --width 512 --height 512 --tool_name RCSeg
 ```
 
-### Creation of the folds for the cross validation
+### Creation of the workspace
 
 ```
 python3 src/py/generate_workspace.py --help
@@ -147,9 +147,9 @@ python3 src/py/generate_workspace.py --help
 
 input: folder containing all the scans and segmentations
 
-output: folder containing the scans and segmentations divided into training/testing. The training folder is also divided into the number of folds wanted.
+output: folder containing the scans and segmentations divided into training/testing(/validation)
 
-Takes a folder, searches into all the subfolders and seperates the scans and the segmentations. Moves thoses files into the output folder. A training folder and a testing folder are created (the training folder is devided into the specified number of folds). The percentage or number of files for testing is selected randomly inside each folder, according to the propotion of files in each of them, to prevent class imbalance.
+Takes a folder, searches into all the subfolders and seperates the scans and the segmentations. Moves thoses files into the output folder. A training folder and a testing folder are created. The training folder is divided into the specified number of folds, or, if the number of folds is 0, a validation folder can be created. The percentage or number of files for testing and validation is selected randomly inside each folder, according to the propotion of files in each of them, to prevent class imbalance.
 
 ```
 usage: generate_workspace.py [-h] --dir DIR --out OUT [--cv_folds CV_FOLDS]
@@ -188,7 +188,7 @@ input: 3D CBCT scans (.nii | nii.gz, .gipl | .gipl.gz, .nrrd)
 
 output: 2D .png slices from the scans
 
-Takes a single image or a directory, performs contrast adjustment and deconstructs the 3D scan into 2D slices
+Takes a single image or a directory, performs contrast adjustment and deconstructs the 3D scan into 2D slices of the specified size.
 
 ```
 usage: preprocess.py [-h] (--image IMAGE | --dir DIR)
@@ -232,7 +232,7 @@ input: 3D CBCT labels (.nii | nii.gz, .gipl | .gipl.gz, .nrrd)
 
 output: 2D .png slices from the labels
 
-Takes a single label or a directory and deconstructs the 3D scan into 2D slices
+Takes a single label or a directory and deconstructs the 3D scan into 2D slices of the specified size.
 
 ```
 usage: labels_preprocess.py [-h] (--image IMAGE | --dir DIR)
@@ -297,7 +297,7 @@ Output parameters:
 
 #### Training  model
 
-The neural network choosen is a U-Net architecture. The loss function is the *BinaryCrossentropy*. The metrics monitered during the training were the *Recall, Precision and AUC* metrics. 
+The neural network choosen is a U-Net architecture. The loss function is the *BinaryCrossentropy*. The metrics monitered during the training were the *Recall* and *Precision* metrics. 
 
 ```
 python3 src/py/training_seg.py --help
@@ -305,7 +305,7 @@ python3 src/py/training_seg.py --help
 
 input: The scans and labels for the training
 
-output: The model
+output: The trained models, saved every *save_frequence* epochs
 
 The algorithm takes as an input the training fold. It will use one of the cross validation folder as a validation set and the rest as a training set. The *save_frequence* parameter allow you to save the model at specific epochs. 
 
@@ -368,7 +368,7 @@ input: 2D slices form CBCT scans
 
 output: 2D slices predicted by the model
 
-Takes 2D slices as an input from a CBCT scan and output the label predicted for each slices.
+Takes 2D slices as an input from a CBCT scan and outputs the segmentation predicted for each slices. The output is not binary, it is a probability of each pixel to belong to the segmentation (value between [0;255]).
 
 ```
 usage: predict_seg.py [-h] --dir_predict DIR_PREDICT [--width WIDTH]
@@ -403,8 +403,7 @@ input: directory with .png slices
 
 output: directory with reconstructed 3D image
 
-Takes an input directory containing .png slices and reconstructs the 3D image. Saves it as .nrrd.
-Post-processing will be added to this function.
+Takes an input directory containing .png slices and reconstructs the 3D image. Post-processing is applied to improve the segmentation, depending on the tool_name (RCSeg or MandSeg). The output is saved with the same extension than the original scan.
 
 ```
 usage: postprocess.py [-h] --dir DIR --original_dir ORIGINAL_DIR [--tool TOOL]
@@ -440,7 +439,7 @@ python3 src/py/metrics.py --help
 
 input: either a 3D file and its ground truth, or a directory of 3D files and their ground truths.
 
-output: excel file containing the mean evaluation metrics (AUC, F1 score, Accuracy, Sensitivity, Precision) of the input files.
+output: excel file containing the mean evaluation metrics (AUPRC, AUPRC - Baseline, F1-score, F2-score, Accuracy, Sensitivity, Precision) of the input files.
 
 Compares the prediction made by the algorithm to the ground truth to evaluate the performances of the trained model.
 If the output excel file already exist, it adds the results into a new line.
