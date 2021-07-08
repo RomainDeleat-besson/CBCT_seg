@@ -269,6 +269,7 @@ if __name__ ==  '__main__':
     predicted_files = input_params.add_mutually_exclusive_group(required=True)
     predicted_files.add_argument('--pred_img', type=str, help='Input predicted reconstructed 3D image')
     predicted_files.add_argument('--pred_dir', type=str, help='Input directory with predicted reconstructed 3D images')
+    
     predicted_raw_files = input_params.add_mutually_exclusive_group()
     predicted_raw_files.add_argument('--pred_raw_img', type=str, help='Input raw predicted reconstructed 3D image')
     predicted_raw_files.add_argument('--pred_raw_dir', type=str, help='Input directory with raw predicted reconstructed 3D images')

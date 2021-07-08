@@ -57,7 +57,7 @@ if __name__ ==  '__main__':
 	size_group.add_argument('--desired_height', type=int, default=512)
 
 	output_params = parser.add_argument_group('Output parameters')
-	output_params.add_argument('--out', type=str, help='Output directory of the label slices')
+	output_params.add_argument('--out', type=str, help='Output directory of the label slices', required=True)
 
 	args = parser.parse_args()
 

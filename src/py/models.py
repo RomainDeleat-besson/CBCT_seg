@@ -67,7 +67,7 @@ def unet_2D(width, height, NumberFilters=32, dropout=0.1, learning_rate=0.0001):
         out = Conv2D(1, 1, activation = 'sigmoid')(conv9)
         model = Model(inputs, out)
 
-        model.compile(optimizer = Adam(lr=learning_rate), loss = BinaryCrossentropy(), metrics = [Precision(), Recall(), AUC()])
+        model.compile(optimizer = Adam(lr=learning_rate), loss = BinaryCrossentropy(), metrics = [Precision(), Recall()])
     
     model.summary()
     return model

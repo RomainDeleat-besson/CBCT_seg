@@ -63,7 +63,7 @@ if __name__ ==  '__main__':
 	contrast_group.add_argument('--max_percentage', type=int, default=90)
 
 	output_params = parser.add_argument_group('Output parameters')
-	output_params.add_argument('--out', type=str, help='Output directory')
+	output_params.add_argument('--out', type=str, help='Output directory', required=True)
 
 	args = parser.parse_args()
 
