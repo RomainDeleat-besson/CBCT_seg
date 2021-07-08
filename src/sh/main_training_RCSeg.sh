@@ -120,7 +120,7 @@ while [ "$1" != "" ]; do
     shift
 done
 
-dir_project="${dir_project:-/Users/luciacev-admin/Documents/RCS_project}"
+dir_project="${dir_project:-/Users/luciacev-admin/Documents/RCSeg_project}"
 dir_src="${dir_src:-$dir_project/scripts/CBCT_seg}"
 dir_data="${dir_data:-$dir_project/data}"
 dir_database="${dir_database:-$dir_data/database}"
