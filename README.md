@@ -37,20 +37,20 @@ To run the prediction algorithm, run the folowing command line:
 bash src/sh/main_prediction.sh --help
 ```
 
-```
-the input parameters are:
 
---dir_src                 Folder containing the scripts.
---dir_input               Folder containing the scans to segment.
---dir_output              Folder to save the postprocessed images
+> the input parameters are:
+> 
+> --dir_src                 Folder containing the scripts.
+> --dir_input               Folder containing the scans to segment.
+> --dir_output              Folder to save the postprocessed images
+> 
+> the optionnal parameters are:
+> 
+> --width                   Width of the images
+> --height                  Height of the images
+> --tool_name               Tool name [MandSeg | RCSeg]
+> -h|--help                 Print this Help.
 
-the optionnal parameters are:
-
---width                   Width of the images
---height                  Height of the images
---tool_name               Tool name [MandSeg | RCSeg]
--h|--help                 Print this Help.
-```
 
 **Training**
 
