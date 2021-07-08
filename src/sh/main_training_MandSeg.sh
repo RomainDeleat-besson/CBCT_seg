@@ -26,6 +26,7 @@ echo "--min_percentage          Min percentage to threshold images for preproces
 echo "--max_percentage          Max percentage to threshold images for preprocessing"
 echo "--model_name              Name of the model"
 echo "--epochs                  Number of epochs for training the models"
+echo "--ratio                   Ratio of slices outside of the region of interest to remove (value between [0;1])"
 echo "--save_frequence          Frequence of saving the models"
 echo "--width                   Width of the images"
 echo "--height                  Height of the images"
@@ -35,6 +36,7 @@ echo "--NumberFilters           Number of filters"
 echo "--dropout                 Dropout"
 echo "--num_epoch               Number of the epoch of the model to select for the prediction"
 echo "--tool_name               Name of the tool used"
+echo "--threshold               Threshold to use to binarize scans in postprocess (-1 for otsu | [0;255] for a specific value)"
 echo "--out_metrics_val         File to save the evaluation metrics of the models on the validation set"
 echo "--out_metrics_testing     File to save the evaluation metrics of the models on the testing set"
 echo "-h|--help                 Print this Help."
@@ -81,6 +83,8 @@ while [ "$1" != "" ]; do
             model_name=$1;;
         --epochs )  shift
             epochs=$1;;
+        --ratio )  shift
+            ratio=$1;;
         --save_frequence )  shift
             save_frequence=$1;;
         --width )  shift
@@ -99,6 +103,8 @@ while [ "$1" != "" ]; do
             num_epoch=$1;;
         --tool_name )  shift
             tool_name=$1;;
+        --threshold )  shift
+            threshold=$1;;
         --out_metrics_val )  shift
             out_metrics_val=$1;;
         --out_metrics_testing )  shift
@@ -115,20 +121,20 @@ while [ "$1" != "" ]; do
 done
 
 dir_project="${dir_project:-/Users/luciacev-admin/Documents/MandSeg}"
-dir_src="${dir_src:-$dir_project/master/CBCT_seg}"
+dir_src="${dir_src:-$dir_project/scripts/CBCT_seg}"
 dir_data="${dir_data:-$dir_project/data}"
 dir_database="${dir_database:-$dir_data/database}"
-dir_cv="${dir_cv:-$dir_data/CV}"
-dir_test="$dir_cv/Testing"
-dir_train="$dir_cv/Training"
-dir_test_preproc="${dir_test_preproc:-$dir_cv/Testing_PreProcessed}"
-dir_train_preproc="${dir_train_preproc:-$dir_cv/Training_PreProcessed}"
-dir_test_predict="${dir_test_predict:-$dir_cv/Testing_Predicted}"
-dir_train_predict="${dir_train_predict:-$dir_cv/Training_Predicted}"
-dir_test_postproc="${dir_test_postproc:-$dir_cv/Testing_PostProcessed}"
-dir_train_postproc="${dir_train_postproc:-$dir_cv/Training_PostProcessed}"
+dir_cv="${dir_cv:-$dir_data/cross_validation}"
+dir_test="$dir_cv/testing"
+dir_train="$dir_cv/training"
+dir_test_preproc="${dir_test_preproc:-$dir_cv/testing_preprocessed}"
+dir_train_preproc="${dir_train_preproc:-$dir_cv/training_preprocessed}"
+dir_test_predict="${dir_test_predict:-$dir_cv/testing_predicted}"
+dir_train_predict="${dir_train_predict:-$dir_cv/training_predicted}"
+dir_test_postproc="${dir_test_postproc:-$dir_cv/testing_postprocessed}"
+dir_train_postproc="${dir_train_postproc:-$dir_cv/training_postprocessed}"
 
-model_name="${model_name:-CBCT_seg_model}"
+model_name="${model_name:-MandSeg_model}"
 dir_model="${dir_model:-$dir_project/models/$model_name}"
 dir_log="${dir_log:-$dir_model/log_dir}"
 
@@ -139,47 +145,48 @@ max_percentage="${max_percentage:-90}"
 epochs="${epochs:-80}"
 ratio="${ratio:-0.5}"
 save_frequence="${save_frequence:-5}"
-width="${width:-320}"
-height="${height:-320}"
+width="${width:-256}"
+height="${height:-256}"
 learning_rate="${learning_rate:-0.0001}"
 batch_size="${batch_size:-32}"
 NumberFilters="${NumberFilters:-16}"
 dropout="${dropout:-0.1}"
 num_epoch="${num_epoch:-40}"
 tool_name="${tool_name:-MandSeg}"
+threshold="${threshold:--1}"
 
 out_metrics_val="${out_metrics_val:-$dir_data/out/metrics_validation.xlsx}"
 out_metrics_testing="${out_metrics_testing:-$dir_data/out/metrics_testing.xlsx}"
 
-python3 $dir_src/src/py/CV_folds.py \
+python3 $dir_src/src/py/generate_workspace.py \
         --dir $dir_database \
         --out $dir_cv \
         --cv_folds $cv_folds \
-        --testing_percentage $testing_percentage
+        --testing_percentage $testing_percentage \
 
 folds=$(eval echo $dir_train/{1..$cv_folds})
 for dir in $folds $dir_test
 do
     outdir=$(echo $dir | sed -e "s|${dir_test}|${dir_test_preproc}|g" -e "s|${dir_train}|${dir_train_preproc}|g")
-    python3 $dir_src/src/py/PreProcess.py \
+    python3 $dir_src/src/py/preprocess.py \
             --dir $dir/Scans \
             --desired_width $width \
             --desired_height $height \
             --min_percentage $min_percentage \
             --max_percentage $max_percentage \
-            --out $outdir/Scans 
+            --out $outdir/Scans \
 
     python3 $dir_src/src/py/labels_preprocess.py \
             --dir $dir/Segs \
             --desired_width $width \
             --desired_height $height \
-            --out $outdir/Segs
+            --out $outdir/Segs \
 done
 
 for cv_fold in $(eval echo {1..$cv_folds})
 do
     echo $cv_fold
-    python3 $dir_src/src/py/training_Seg.py \
+    python3 $dir_src/src/py/training_seg.py \
             --dir_train $dir_train_preproc \
             --val_folds $cv_fold \
             --save_model $dir_model \
@@ -194,7 +201,7 @@ do
             --learning_rate $learning_rate \
             --batch_size $batch_size \
             --number_filters $NumberFilters \
-            --dropout $dropout
+            --dropout $dropout \
 done
 
 folds=$(eval echo $dir_train_preproc/{1..$cv_folds})
@@ -203,19 +210,20 @@ do
     dir_predict=$(echo $dir | sed -e "s|${dir_train_preproc}|${dir_train_predict}|g")
     dir_postproc=$(echo $dir | sed -e "s|${dir_train_preproc}|${dir_train_postproc}|g")
     dir_gt=$(echo $dir | sed -e "s|${dir_train_preproc}|${dir_train}|g")
-    python3 $dir_src/src/py/predict_Seg.py \
+    python3 $dir_src/src/py/predict_seg.py \
             --dir_predict $dir/Scans \
             --load_model $dir_model/$model_name"_"$(basename ${dir})"_"$num_epoch.hdf5 \
             --width $width \
             --height $height \
-            --out $dir_predict
+            --out $dir_predict \
     
-    python3 $dir_src/src/py/PostProcess.py \
+    python3 $dir_src/src/py/postprocess.py \
             --dir $dir_predict \
             --original_dir $dir_gt/Scans \
             --tool $tool_name \
+            --threshold $threshold \
             --out $dir_postproc \
-            --out_raw $dir_postproc"_raw"
+            --out_raw $dir_postproc"_raw" \
 
     python3 $dir_src/src/py/metrics.py \
             --pred_dir $dir_postproc \
@@ -228,7 +236,7 @@ do
             --learning_rate $learning_rate \
             --batch_size $batch_size \
             --number_filters $NumberFilters \
-            --cv_fold $(basename ${dir})
+            --cv_fold $(basename ${dir}) \
 done
 
 folds=$(eval echo $dir_test_preproc/{1..$cv_folds})
@@ -236,20 +244,20 @@ for dir in $folds
 do
     dir_predict=$(echo $dir | sed -e "s|${dir_test_preproc}|${dir_test_predict}|g")
     dir_postproc=$(echo $dir | sed -e "s|${dir_test_preproc}|${dir_test_postproc}|g")
-    python3 $dir_src/src/py/predict_Seg.py \
+    python3 $dir_src/src/py/predict_seg.py \
             --dir_predict $(dirname ${dir})/Scans \
             --load_model $dir_model/$model_name"_"$(basename ${dir})"_"$num_epoch.hdf5 \
             --width $width \
             --height $height \
-            --out $dir_predict
+            --out $dir_predict \
     
-    python3 $dir_src/src/py/PostProcess.py \
+    python3 $dir_src/src/py/postprocess.py \
             --dir $dir_predict \
             --original_dir $dir_test/Scans \
             --tool $tool_name \
-            --threshold -1 \
+            --threshold $threshold \
             --out $dir_postproc \
-            --out_raw $dir_postproc"_raw"
+            --out_raw $dir_postproc"_raw" \
 
     python3 $dir_src/src/py/metrics.py \
             --pred_dir $dir_postproc \
@@ -262,5 +270,5 @@ do
             --learning_rate $learning_rate \
             --batch_size $batch_size \
             --number_filters $NumberFilters \
-            --cv_fold $(basename ${dir})
+            --cv_fold $(basename ${dir}) \
 done
