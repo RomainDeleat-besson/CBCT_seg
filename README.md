@@ -33,8 +33,9 @@ It takes several CBCT scans in input, with the extensions: .nii | nii.gz, .gipl 
 **Prediction**
 
 To run the prediction algorithm, run the folowing command line:
-
-- bash src/sh/main_prediction.sh PARAMETERS
+```
+bash src/sh/main_prediction.sh --help
+```
 
 ```
 the input parameters are:
