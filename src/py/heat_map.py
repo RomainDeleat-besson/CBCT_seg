@@ -23,7 +23,7 @@ def main(args):
 
     print("Pre-processing...")
     # Read and process the input files
-    y_train    = np.array([Array_2_5D(path, label_paths, width, height, label=True) for path in label_paths])
+    y_train    = np.array([ProcessDataset(path, label_paths, width, height, label=True) for path in label_paths])
     y_train = np.reshape(y_train, y_train.shape+(1,))
     print("shape label:", np.shape(y_train))
     heat_map_true = np.sum(y_train, axis=0)
@@ -57,7 +57,7 @@ if __name__ ==  '__main__':
     param.add_argument('--height', type=int, default=512)
 
     output_params = parser.add_argument_group('Output parameters')
-    output_params.add_argument('--out', type=str, help='Output file')
+    output_params.add_argument('--out', type=str, help='Output file', required=True)
      
     args = parser.parse_args()
 

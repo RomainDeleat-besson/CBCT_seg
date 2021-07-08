@@ -101,7 +101,7 @@ if __name__ ==  '__main__':
     output_params.add_argument('--cv_folds', type=int, help='Number of folds to create', default=10)
     
     testing_params = output_params.add_mutually_exclusive_group()
-    testing_params.add_argument('--testing_number', type=int, help='Number of scans to keep for testing')
+    testing_params.add_argument('--testing_number', type=int, help='Number of scans to keep for testing', default=1)
     testing_params.add_argument('--testing_percentage', type=int, help='Percentage of scans to keep for testing', default=20)
 
     args = parser.parse_args()

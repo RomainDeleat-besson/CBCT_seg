@@ -173,7 +173,7 @@ if __name__ ==  '__main__':
     training_parameters.add_argument('--model_name', type=str, help='Name of the model', default='CBCT_seg_model')
     training_parameters.add_argument('--epochs', type=int, help='Number of epochs', default=20)
     training_parameters.add_argument('--save_frequence', type=int, help='Epoch frequence to save the model', default=5)
-    training_parameters.add_argument('--learning_rate_schedular', type=bool, help='Set the LRS', default=False)
+    training_parameters.add_argument('--learning_rate_schedular', type=bool, help='Set the LRS')
     training_parameters.add_argument('--width', type=int, default=512)
     training_parameters.add_argument('--height', type=int, default=512)
     training_parameters.add_argument('--batch_size', type=int, help='Batch size value', default=32)
