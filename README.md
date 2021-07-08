@@ -124,7 +124,7 @@ docker pull dcbia/mandseg:latest
 ```
 
 ```
-docker run --rm -v */my/input/folder*:/app/scans mandseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scan --path_model /app/model/*ModelName* --min_percentage 30 --max_percentage 90 --width 256 --height 256 --tool_name MandSeg
+docker run --rm -v */my/input/folder*:/app/scans mandseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scans --path_model /app/model/*ModelName* --min_percentage 30 --max_percentage 90 --width 256 --height 256 --tool_name MandSeg --threshold -1
 ```
 
 *RCSeg:*
@@ -136,7 +136,7 @@ docker pull dcbia/rcseg:latest
 ```
 
 ```
-docker run --rm -v */my/input/folder*:/app/scans rcseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scan --path_model /app/model/*ModelName* --min_percentage 55 --max_percentage 90 --width 512 --height 512 --tool_name RCSeg
+docker run --rm -v */my/input/folder*:/app/scans rcseg:latest bash /app/src/sh/main_prediction.sh --dir_src /app/src --dir_input /app/scans --path_model /app/model/*ModelName* --min_percentage 55 --max_percentage 90 --width 512 --height 512 --tool_name RCSeg --threshold 100
 ```
 
 ### Creation of the workspace
