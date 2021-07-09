@@ -155,8 +155,8 @@ tool_name="${tool_name:-RCSeg}"
 threshold="${threshold:-100}"
 ration="${ration:-1}"
 
-out_metrics_val="${out_metrics_val:-$dir_data/out/metrics_validation_RCS.xlsx}"
-out_metrics_testing="${out_metrics_testing:-$dir_data/out/metrics_testing_RCS.xlsx}"
+out_metrics_val="${out_metrics_val:-$dir_data/out/metrics_validation_RCSeg.xlsx}"
+out_metrics_testing="${out_metrics_testing:-$dir_data/out/metrics_testing_RCSeg.xlsx}"
 
 python3 $dir_src/src/py/generate_workspace.py \
         --dir $dir_database \

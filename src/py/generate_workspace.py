@@ -9,8 +9,8 @@ from utils import *
 
 def main(args):
     outdir = os.path.normpath("/".join([args.out]))
-    train_path = os.path.join(outdir,'Training')
-    test_path = os.path.join(outdir,'Testing')
+    train_path = os.path.join(outdir,'training')
+    test_path = os.path.join(outdir,'testing')
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
@@ -70,7 +70,7 @@ def main(args):
         
         if args.cv_folds == 0:
             if val_nbr != 0:
-                val_path = os.path.join(outdir,'Validation')
+                val_path = os.path.join(outdir,'validation')
                 if not os.path.exists(val_path):
                     os.makedirs(os.path.join(val_path,'Scans'))
                     os.makedirs(os.path.join(val_path,'Segs'))
