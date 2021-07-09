@@ -153,7 +153,7 @@ dropout="${dropout:-0.1}"
 num_epoch="${num_epoch:-50}"
 tool_name="${tool_name:-RCSeg}"
 threshold="${threshold:-100}"
-ration="${ration:-1}"
+ratio="${ratio:-1}"
 
 out_metrics_val="${out_metrics_val:-$dir_data/out/metrics_validation_RCSeg.xlsx}"
 out_metrics_testing="${out_metrics_testing:-$dir_data/out/metrics_testing_RCSeg.xlsx}"
