@@ -20,6 +20,7 @@ echo "--dir_test_predict        Folder to save the predicted testing images"
 echo "--dir_train_predict       Folder to save the predicted training images"
 echo "--dir_test_postproc       Folder to save the postprocessed testing images"
 echo "--dir_train_postproc      Folder to save the postprocessed training images"
+echo "--dir_metrics             Folder to save the metrics excel files of the evaluation of the model(s)"
 echo "--cv_folds                Number of folds for the cross validation."
 echo "--testing_percentage      Percentage of images to keep for testing"
 echo "--min_percentage          Min percentage to threshold images for preprocessing"
@@ -71,6 +72,8 @@ while [ "$1" != "" ]; do
             dir_test_postproc=$1;;
         --dir_train_postproc )  shift
             dir_train_postproc=$1;;
+        --dir_metrics )  shift
+            dir_metrics=$1;;
         --cv_folds )  shift
             cv_folds=$1;;
         --testing_percentage )  shift
@@ -133,6 +136,7 @@ dir_test_predict="${dir_test_predict:-$dir_cv/testing_predicted}"
 dir_train_predict="${dir_train_predict:-$dir_cv/training_predicted}"
 dir_test_postproc="${dir_test_postproc:-$dir_cv/testing_postprocessed}"
 dir_train_postproc="${dir_train_postproc:-$dir_cv/training_postprocessed}"
+dir_metrics="${dir_metrics:-$dir_data/metrics}"
 
 model_name="${model_name:-MandSeg_model}"
 dir_model="${dir_model:-$dir_project/models/$model_name}"
