@@ -159,8 +159,8 @@ num_epoch="${num_epoch:-40}"
 tool_name="${tool_name:-MandSeg}"
 threshold="${threshold:--1}"
 
-out_metrics_val="${out_metrics_val:-$dir_data/out/metrics_validation.xlsx}"
-out_metrics_testing="${out_metrics_testing:-$dir_data/out/metrics_testing.xlsx}"
+out_metrics_val="${out_metrics_val:-$dir_data/$dir_metrics/metrics_validation.xlsx}"
+out_metrics_testing="${out_metrics_testing:-$dir_data/$dir_metrics/metrics_testing.xlsx}"
 
 python3 $dir_src/src/py/generate_workspace.py \
         --dir $dir_database \
