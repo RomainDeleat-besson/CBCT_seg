@@ -7,8 +7,8 @@ echo "Program to train and evaluate a 2D U-Net segmentation model"
 echo
 echo "Syntax: main_prediction.sh [--options]"
 echo "options:"
-echo "--dir_src                 Folder containing the scripts."
-echo "--dir_input               Folder containing the scans to segment."
+echo "--dir_src                 Path to the Folder that contains the source code."
+echo "--file_input              Scans to segment."
 echo "--dir_output              Folder to save the postprocessed images"
 echo "--width                   Width of the images"
 echo "--height                  Height of the images"
@@ -22,8 +22,8 @@ while [ "$1" != "" ]; do
     case $1 in
         --dir_src )  shift
             dir_src=$1;;
-        --dir_input )  shift
-            dir_input=$1;;
+        --file_input )  shift
+            file_input=$1;;
         --dir_output )  shift
             dir_output=$1;;
         --path_model )  shift
@@ -52,8 +52,8 @@ while [ "$1" != "" ]; do
 done
 
 dir_src="${dir_src:-./CBCT_seg/src}"
-dir_input="${dir_input:-./Scans}"
-dir_output="${dir_output:-$dir_input}"
+# dir_input="${dir_input:-./Scans}"
+dir_output="${dir_output:-$(dirname $file_input)}"
 
 min_percentage="${min_percentage:-55}"
 max_percentage="${max_percentage:-90}"
@@ -64,23 +64,23 @@ threshold="${threshold:-100}"
 
 
 python3 $dir_src/py/preprocess.py \
-    --dir $dir_input \
+    --image $file_input \
     --desired_width $width \
     --desired_height $height \
     --min_percentage $min_percentage \
     --max_percentage $max_percentage \
-    --out "$dir_input"_preprocessed \
+    --out "$(dirname $file_input)"_preprocessed \
 
 python3 $dir_src/py/predict_seg.py \
-    --dir_predict "$dir_input"_preprocessed \
+    --dir_predict "$(dirname $file_input)"_preprocessed \
     --load_model $path_model \
     --width $width \
     --height $height \
-    --out "$dir_input"_predicted \
+    --out "$(dirname $file_input)"_predicted \
 
 python3 $dir_src/py/postprocess.py \
-    --dir "$dir_input"_predicted \
-    --original_dir $dir_input \
+    --dir "$(dirname $file_input)"_predicted \
+    --original_dir $(dirname $file_input) \
     --tool $tool_name \
     --threshold $threshold \
     --out $dir_output \
