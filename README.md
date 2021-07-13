@@ -48,8 +48,8 @@ bash src/sh/main_prediction_RCSeg.sh --help
 ```
 the input parameters are:
 
---dir_src                 Folder containing the scripts.
---dir_input               Folder containing the scans to segment.
+--dir_src                 Path to the Folder that contains the source code.
+--file_input              Scan to segment.
 --dir_output              Folder to save the postprocessed images
 
 the optionnal parameters are:
@@ -124,7 +124,7 @@ docker pull dcbia/mandseg:latest
 ```
 
 ```
-docker run --rm -v */my/input/folder*:/app/scans -v */my/output/folder*:/app/out mandseg:latest bash /app/src/sh/main_prediction_MandSeg.sh --dir_src /app/src --dir_input /app/scans --dir_output /app/out --path_model /app/model/*ModelName* --min_percentage 30 --max_percentage 90 --width 256 --height 256 --tool_name MandSeg --threshold -1
+docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v */my/output/folder*:/app/out mandseg:latest bash /app/src/sh/main_prediction_MandSeg.sh --dir_src /app/src --file_input /app/scans/$(basename */my/input/file*) --dir_output /app/out --path_model /app/model/*ModelName* 
 ```
 
 *RCSeg:*
@@ -136,7 +136,7 @@ docker pull dcbia/rcseg:latest
 ```
 
 ```
-docker run --rm -v */my/input/folder*:/app/scans -v */my/output/folder*:/app/out rcseg:latest bash /app/src/sh/main_prediction_RCSeg.sh --dir_src /app/src --dir_input /app/scans --dir_output /app/out --path_model /app/model/*ModelName* --min_percentage 55 --max_percentage 90 --width 512 --height 512 --tool_name RCSeg --threshold 100
+docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v */my/output/folder*:/app/out rcseg:latest bash /app/src/sh/main_prediction_RCSeg.sh --dir_src /app/src --file_input /app/scans/$(basename */my/input/file*) --dir_output /app/out --path_model /app/model/*ModelName* 
 ```
 
 ### Creation of the workspace
