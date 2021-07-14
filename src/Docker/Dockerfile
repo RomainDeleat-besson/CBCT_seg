@@ -1,0 +1,20 @@
+FROM python:3.7
+
+RUN apt-get update && \
+	apt-get install -y git
+
+RUN mkdir /app
+WORKDIR /app
+
+RUN wget https://github.com/RomainUSA/CBCT_seg/archive/refs/tags/v3.1.zip
+RUN unzip v3.1.zip
+RUN mv CBCT_seg-3.1/src src
+RUN rm -rf v3.1.zip \
+	rm -rf CBCT_seg-3.1
+
+RUN pip3 install -r /app/src/requirements.txt
+
+RUN mkdir /app/model
+WORKDIR /app/model
+RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v3.1/MandSeg_Final_35.hdf5
+RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v3.1/RCSeg_Final_50.hdf5

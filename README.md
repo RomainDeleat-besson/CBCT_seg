@@ -115,28 +115,26 @@ the optionnal parameters are:
 
 ### Docker
 
+You can get the CBCT_seg docker image by running the folowing command line:
+
+```
+docker pull dcbia/cbct-seg:latest
+```
+
 *MandSeg:*
 
-You can get and run the MandSeg docker image by running the folowing command line:
+To run MandSeg inside the docker container, run the following command line:
 
 ```
-docker pull dcbia/mandseg:latest
-```
-
-```
-docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v */my/output/folder*:/app/out mandseg:latest bash /app/src/sh/main_prediction_MandSeg.sh --dir_src /app/src --file_input /app/scans/$(basename */my/input/file*) --dir_output /app/out --path_model /app/model/*ModelName* 
+docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v */my/output/folder*:/app/out cbct-seg:latest bash /app/src/sh/main_prediction_MandSeg.sh --dir_src /app/src --file_input /app/scans/$(basename */my/input/file*) --dir_output /app/out --path_model /app/model/MandSeg_Final_35.hdf5
 ```
 
 *RCSeg:*
 
-You can get and run the RCSeg docker image by running the folowing command line:
+To run RCSeg inside the docker container, run the following command line:
 
 ```
-docker pull dcbia/rcseg:latest
-```
-
-```
-docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v */my/output/folder*:/app/out rcseg:latest bash /app/src/sh/main_prediction_RCSeg.sh --dir_src /app/src --file_input /app/scans/$(basename */my/input/file*) --dir_output /app/out --path_model /app/model/*ModelName* 
+docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v */my/output/folder*:/app/out cbct-seg:latest bash /app/src/sh/main_prediction_RCSeg.sh --dir_src /app/src --file_input /app/scans/$(basename */my/input/file*) --dir_output /app/out --path_model /app/model/RCSeg_Final_50.hdf5
 ```
 
 ### Creation of the workspace
