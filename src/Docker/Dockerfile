@@ -18,3 +18,5 @@ RUN mkdir /app/model
 WORKDIR /app/model
 RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v3.1/MandSeg_Final_35.hdf5
 RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v3.1/RCSeg_Final_50.hdf5
+
+WORKDIR /app

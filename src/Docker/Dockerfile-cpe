@@ -1,4 +1,5 @@
-FROM dcbia/cbct_seg:latest-mand-seg
+
+FROM dcbia/cbct_seg:latest
 
 RUN mkdir -p /app/.nvm
 
