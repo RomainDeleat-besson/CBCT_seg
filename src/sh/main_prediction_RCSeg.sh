@@ -5,7 +5,7 @@ Help()
 # Display Help
 echo "Program to train and evaluate a 2D U-Net segmentation model"
 echo
-echo "Syntax: main_prediction.sh [--options]"
+echo "Syntax: main_prediction_RCSeg.sh [--options]"
 echo "options:"
 echo "--dir_src                 Path to the Folder that contains the source code."
 echo "--file_input              Scans to segment."
