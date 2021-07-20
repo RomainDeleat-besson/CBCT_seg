@@ -62,6 +62,7 @@ height="${height:-256}"
 tool_name="${tool_name:-MandSeg}"
 threshold="${threshold:--1}"
 
+
 python3 $dir_src/py/preprocess.py \
     --image $file_input \
     --desired_width $width \

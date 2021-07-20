@@ -1,7 +1,12 @@
-FROM python:3.7
+FROM tensorflow/tensorflow:2.4.1-gpu
 
 RUN apt-get update && \
-	apt-get install -y git
+	apt-get install -y git \
+	libx11-6 \
+	libgl1 \
+	libopengl0 \
+	libegl1 \
+	wget
 
 RUN mkdir /app
 WORKDIR /app
