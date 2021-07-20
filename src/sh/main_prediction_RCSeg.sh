@@ -8,7 +8,7 @@ echo
 echo "Syntax: main_prediction.sh [--options]"
 echo "options:"
 echo "--dir_src                 Path to the Folder that contains the source code."
-echo "--file_input              Scans to segment."
+echo "--file_input              Scan to segment."
 echo "--dir_output              Folder to save the postprocessed images"
 echo "--width                   Width of the images"
 echo "--height                  Height of the images"
