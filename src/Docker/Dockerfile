@@ -25,3 +25,7 @@ RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v3.1/MandSeg_Fi
 RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v3.1/RCSeg_Final_50.hdf5
 
 WORKDIR /app
+
+
+RUN chmod +x src/sh/*.sh
+ENV PATH=/app/src/sh:$PATH
