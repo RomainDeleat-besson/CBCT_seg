@@ -48,17 +48,19 @@ bash src/sh/main_prediction_RCSeg.sh --help
 ```
 the input parameters are:
 
---dir_src                 Path to the Folder that contains the source code.
---file_input              Scan to segment.
+--dir_src                 Path to the Folder that contains the source code
+--file_input              Scan to segment
+--dir_preproc             Folder to save the preprocessed images
+--dir_predicted           Folder to save the predicted images
 --dir_output              Folder to save the postprocessed images
 
-the optionnal parameters are:
+The optionnal parameters are:
 
 --width                   Width of the images
 --height                  Height of the images
 --tool_name               Tool name [MandSeg | RCSeg]
 --threshold               Threshold to use to binarize scans in postprocess. (-1 for otsu | [0;255] for a specific value)
--h|--help                 Print this Help.
+-h|--help                 Print this Help
 ```
 
 **Training**
@@ -126,7 +128,7 @@ docker pull dcbia/cbct-seg:latest
 To run MandSeg inside the docker container, run the following command line:
 
 ```
-docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v */my/output/folder*:/app/out cbct-seg:latest bash /app/src/sh/main_prediction_MandSeg.sh --dir_src /app/src --file_input /app/scans/$(basename */my/input/file*) --dir_output /app/out --path_model /app/model/MandSeg_Final_35.hdf5
+docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v */my/output/folder*:/app/out cbct-seg:latest main_prediction_MandSeg.sh --dir_src /app/src --file_input /app/scans/$(basename */my/input/file*) --dir_output /app/out --path_model /app/model/MandSeg_Final_35.hdf5
 ```
 
 *RCSeg:*
@@ -134,7 +136,7 @@ docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v *
 To run RCSeg inside the docker container, run the following command line:
 
 ```
-docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v */my/output/folder*:/app/out cbct-seg:latest bash /app/src/sh/main_prediction_RCSeg.sh --dir_src /app/src --file_input /app/scans/$(basename */my/input/file*) --dir_output /app/out --path_model /app/model/RCSeg_Final_50.hdf5
+docker run --rm -v */my/input/file*:/app/scans/$(basename */my/input/file*) -v */my/output/folder*:/app/out cbct-seg:latest main_prediction_RCSeg.sh --dir_src /app/src --file_input /app/scans/$(basename */my/input/file*) --dir_output /app/out --path_model /app/model/RCSeg_Final_50.hdf5
 ```
 
 ### Creation of the workspace

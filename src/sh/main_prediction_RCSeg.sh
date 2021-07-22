@@ -7,14 +7,16 @@ echo "Program to train and evaluate a 2D U-Net segmentation model"
 echo
 echo "Syntax: main_prediction_RCSeg.sh [--options]"
 echo "options:"
-echo "--dir_src                 Path to the Folder that contains the source code."
-echo "--file_input              Scan to segment."
+echo "--dir_src                 Path to the Folder that contains the source code"
+echo "--file_input              Scan to segment"
+echo "--dir_preproc             Folder to save the preprocessed images"
+echo "--dir_predicted           Folder to save the predicted images"
 echo "--dir_output              Folder to save the postprocessed images"
 echo "--width                   Width of the images"
 echo "--height                  Height of the images"
 echo "--tool_name               Tool name [MandSeg | RCSeg]"
 echo "--threshold               Threshold to use to binarize scans in postprocess. (-1 for otsu | [0;255] for a specific value)"
-echo "-h|--help                 Print this Help."
+echo "-h|--help                 Print this Help"
 echo
 }
 
@@ -24,6 +26,10 @@ while [ "$1" != "" ]; do
             dir_src=$1;;
         --file_input )  shift
             file_input=$1;;
+        --dir_preproc )  shift
+            dir_preproc=$1;;
+        --dir_predicted )  shift
+            dir_predicted=$1;;
         --dir_output )  shift
             dir_output=$1;;
         --path_model )  shift
@@ -53,6 +59,8 @@ done
 
 dir_src="${dir_src:-./CBCT_seg/src}"
 # dir_input="${dir_input:-./Scans}"
+dir_preproc="${dir_preproc:-/app/data/preproc}"
+dir_predicted="${dir_predicted:-/app/data/predicted}"
 dir_output="${dir_output:-$(dirname $file_input)}"
 
 min_percentage="${min_percentage:-55}"
@@ -69,17 +77,17 @@ python3 $dir_src/py/preprocess.py \
     --desired_height $height \
     --min_percentage $min_percentage \
     --max_percentage $max_percentage \
-    --out "$(dirname $file_input)"_preprocessed \
+    --out $dir_preproc \
 
 python3 $dir_src/py/predict_seg.py \
-    --dir_predict "$(dirname $file_input)"_preprocessed \
+    --dir_predict $dir_preproc \
     --load_model $path_model \
     --width $width \
     --height $height \
-    --out "$(dirname $file_input)"_predicted \
+    --out $dir_predicted \
 
 python3 $dir_src/py/postprocess.py \
-    --dir "$(dirname $file_input)"_predicted \
+    --dir $dir_predicted \
     --original_dir $(dirname $file_input) \
     --tool $tool_name \
     --threshold $threshold \
