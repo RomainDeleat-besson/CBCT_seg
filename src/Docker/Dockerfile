@@ -24,9 +24,9 @@ WORKDIR /app/model
 RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v3.1.1/MandSeg_Final_35.hdf5
 RUN wget https://github.com/RomainUSA/CBCT_seg/releases/download/v3.1.1/RCSeg_Final_50.hdf5
 
-RUN mkdir data \
-	mkdir data/preproc \
-	mkdir data/predicted 
+WORKDIR /app
+
+RUN mkdir data data/preproc data/predicted 
 
 RUN chmod +x src/sh/*.sh
 ENV PATH=/app/src/sh:$PATH
